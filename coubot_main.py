@@ -42,7 +42,7 @@ async def fund(ctx):
 async def get_appinfo():
     return await bot.application_info()
 
-def is_teamsmembers():
+def is_teamembers():
     def predicate(ctx):
         app_info = asyncio.run(get_appinfo())
         team = app_info.team
@@ -50,7 +50,7 @@ def is_teamsmembers():
     return commands.check(predicate)
 
 @bot.command(name="킬")
-@is_teamsmembers()
+@is_teamembers()
 async def kill_bot(ctx):
     global timer
     timer = 5
