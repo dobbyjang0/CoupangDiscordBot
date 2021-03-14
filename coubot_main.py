@@ -35,7 +35,7 @@ async def Gcoupang_main(ctx):
     await ctx.send(embed=embed)
 
 @coupang.command(name="지원금")
-async def fund(ctx):
+async def Gcoupang_fund(ctx):
     #do stuff
     pass
 
