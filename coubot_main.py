@@ -17,6 +17,7 @@ async def on_ready():
     print(f"봇 이름: {bot.user}")
     print(f"ID: {bot.user.id}")
 
+# 쿠팡 관련 커맨드
 @bot.group(name="쿠팡")
 async def coupang(ctx):
     pass
@@ -39,6 +40,7 @@ async def Gcoupang_fund(ctx):
     #do stuff
     pass
 
+# 킬 관련 커맨드
 async def get_appinfo():
     return await bot.application_info()
 
