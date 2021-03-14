@@ -3,8 +3,12 @@ import asyncio
 import discord
 import pandas
 import os
+import bs4
+import requests
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
+
+from res.Class import parser
 
 nest_asyncio.apply()
 
@@ -17,6 +21,11 @@ async def on_ready():
     print(f"봇 이름: {bot.user}")
     print(f"ID: {bot.user.id}")
 
+#@bot.event
+#async def on_command_error(error):
+#    pass
+
+# 쿠팡 관련 커맨드
 @bot.group(name="쿠팡")
 async def coupang(ctx):
     pass
@@ -33,6 +42,39 @@ async def Gcoupang_main(ctx):
     embed = discord.Embed(title="쿠팡", description="\n".join("▶ [**%s**](<%s>)" % (k, v) for k, v in descriptions.items()), url="https://coupa.ng/bSQJi8")
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/804815694717911080/817096183637344286/img.png")
     await ctx.send(embed=embed)
+
+@coupang.command(name="검색")
+async def Gcoupang_search(ctx):
+    embed = discord.Embed(title="상품의 이름 또는 링크를 입력해주세요.")
+    msg = await ctx.send(embed=embed)
+
+    async with ctx.typing():
+        embed.set_footer(text="듣고 있어요. 편하게 말씀해주세요!")
+        await msg.edit(embed=embed)
+        wait_m = await bot.wait_for('message', check=lambda m: m.author == ctx.author and m.channel == ctx.channel)
+
+    content = wait_m.content
+    if content.startswith("https://"):
+        if content.startswith("https://www.coupang.com/vp/products/"):
+            pass
+        else:
+            embed.title = "이런!"
+            embed.description = "올바른 쿠팡 상품 링크가 아닌 것 같아요."
+            embed.color = discord.Colour.red()
+            await msg.edit(embed=embed)
+    else:
+        embed.set_footer(text=discord.Embed.Empty)
+        embed.title = "검색중이에요."
+        await msg.edit(embed=embed)
+        url = "https://www.coupang.com/np/search?component=&q=%s" % content
+        items = parser.parser(url)
+        await msg.delete()
+
+        for item in items.items[:3]:
+            embed = discord.Embed()
+            embed.add_field(name=item["name"], value="null")
+            embed.set_image(url=item["image_url"])
+            await ctx.send(embed=embed)
 
 async def get_appinfo():
     return await bot.application_info()
