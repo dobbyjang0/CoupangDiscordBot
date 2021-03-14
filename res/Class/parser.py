@@ -17,11 +17,21 @@ class parser:
         return bs4.BeautifulSoup(html, 'lxml')
 
     @property
+    def status_code(self):
+        return requests.get(self.url).status_code
+
+    @property
     def items(self):
+        if not self.url.startswith("https://www.coupang.com/vp/products/"):
+            raise TypeError
         wrapper = self.bs.find("div", {"class": "search-wrapper"})
         result_count = wrapper.find("div", {"class": "search-query-result"}).find_all("strong")[1].text
         items = wrapper.find("ul", {"class": "search-product-list"}).find_all("li")
         return [{
             "name": item.find("dd", {"class": "descriptions"}).find("div", {"class": "name"}).text,
+            "url": None,
+            "ad": None, # bool
             "image_url": "https:%s" % item.find("dt", {"class": "image"}).find("img").get("src")
         } for item in items]
+
+
