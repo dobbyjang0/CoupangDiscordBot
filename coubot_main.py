@@ -35,15 +35,12 @@ async def Gcoupang_main(ctx):
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/804815694717911080/817096183637344286/img.png")
     await ctx.send(embed=embed)
 
-<<<<<<< HEAD
 @coupang.command(name="지원금")
 async def Gcoupang_fund(ctx):
     #do stuff
     pass
 
 # 킬 관련 커맨드
-=======
->>>>>>> 36ed2eb1d918ab2919c69b595f11baff94b50bde
 async def get_appinfo():
     return await bot.application_info()
 
