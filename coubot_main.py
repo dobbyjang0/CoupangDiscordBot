@@ -21,10 +21,13 @@ async def on_ready():
     print(f"봇 이름: {bot.user}")
     print(f"ID: {bot.user.id}")
 
+<<<<<<< HEAD
 #@bot.event
 #async def on_command_error(error):
 #    pass
 
+=======
+>>>>>>> 3c821366212a1384cec6f93fde96409b74ea488c
 # 쿠팡 관련 커맨드
 @bot.group(name="쿠팡")
 async def coupang(ctx):
@@ -43,6 +46,7 @@ async def Gcoupang_main(ctx):
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/804815694717911080/817096183637344286/img.png")
     await ctx.send(embed=embed)
 
+<<<<<<< HEAD
 @coupang.command(name="검색")
 async def Gcoupang_search(ctx):
     embed = discord.Embed(title="상품의 이름 또는 링크를 입력해주세요.")
@@ -76,6 +80,9 @@ async def Gcoupang_search(ctx):
             embed.set_image(url=item["image_url"])
             await ctx.send(embed=embed)
 
+=======
+# 킬 관련 커맨드
+>>>>>>> 3c821366212a1384cec6f93fde96409b74ea488c
 async def get_appinfo():
     return await bot.application_info()
 
