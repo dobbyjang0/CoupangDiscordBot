@@ -1,6 +1,6 @@
 ### CUSTOM ###
 admin_login_info.csv
-bot_token.txt
+token.env
 
 
 
