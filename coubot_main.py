@@ -72,7 +72,7 @@ async def Gcoupang_search(ctx):
 
         for item in items.items[:3]:
             embed = discord.Embed()
-            embed.add_field(name=item["name"], value="null")
+            embed.set_author(name=item["name"], url=item["url"])
             embed.set_thumbnail(url=item["image_url"])
             await ctx.send(embed=embed)
 

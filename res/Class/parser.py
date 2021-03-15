@@ -20,16 +20,29 @@ class parser:
     def status_code(self):
         return requests.get(self.url).status_code
 
-    @property
-    def items(self):
-        if not self.url.startswith("https://www.coupang.com/np/search?component=&q="):
+    def get_items(self, limit=3, except_ads=True):
+        if not self.url.startswith("https://www.coupang.com/np/search?component=&q=") or not isinstance(limit, int):
             raise TypeError
-        wrapper = self.bs.find("div", {"class": "search-wrapper"})
-        result_count = wrapper.find("div", {"class": "search-query-result"}).find_all("strong")[1].text
-        items = wrapper.find("ul", {"class": "search-product-list"}).find_all("li")
+
+        if not limit <= 0:
+            raise IndexError
+
+        items = self.bs.find("ul", {"id": "productList"}).find_all("li")
+        results = [item for item in items_group[:limit] if item.get("class") != "search-product__ad-badge" or not except_ads]
         return [{
             "name": item.find("dd", {"class": "descriptions"}).find("div", {"class": "name"}).text,
-            "url": None,
-            "ad": None, # bool
-            "image_url": "https:%s" % item.find("dt", {"class": "image"}).find("img").get("src")
-        } for item in items]
+            "url": "https://www.coupang.com%s" % item.find("a").get("href"),
+            "image_url": "https:%s" % item.find("dt", {"class": "image"}).find("img").get("src"),
+            "product_id": item.get("data-product-id"),
+            "is_ad": True if item.get("class") == "search-product__ad-badge" else False,
+            "title_url": "https://www.coupang.com%s" % item.get("data-product-id"),
+            "price": item.find("strong", {"class": "price-value"}).text,
+            "base_price": item.find("del", {"class": "base-price"}).text,
+            "discount_rate": item.find("span", {"class": "instant-discount-rate"}).text,
+            "rating": item.find("em", {"class": "rating"}).text,
+            "rating_count": item.find("span", {"class": "rating-total-count"}).text
+        } for item in items[:limit]]
+
+if __name__ == "__main__":
+    parser = parser("https://www.coupang.com/np/search?component=&q=%EA%B2%80%EC%83%89&channel=user")
+    print(parser.get_items(1))
