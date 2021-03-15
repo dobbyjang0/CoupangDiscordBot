@@ -29,19 +29,34 @@ class parser:
 
         items = self.bs.find("ul", {"id": "productList"}).find_all("li")
         results = [item for item in items[:limit] if item.get("class") != "search-product__ad-badge" or not except_ads]
-        return [{
-            "name": item.find("dd", {"class": "descriptions"}).find("div", {"class": "name"}).text,
-            "url": "https://www.coupang.com%s" % item.find("a").get("href"),
-            "image_url": "https:%s" % item.find("dt", {"class": "image"}).find("img").get("src"),
-            "product_id": item.get("data-product-id"),
-            "is_ad": item.get("class") == "search-product__ad-badge",
-            "title_url": "https://www.coupang.com%s" % item.get("data-product-id"),
-            "price": item.find("strong", {"class": "price-value"}).text,
-            "base_price": None if not item.find("del", {"class": "base-price"}) else item.find("del", {"class": "base-price"}).text,
-            "discount_rate": None if not item.find("span", {"class": "instant-discount-rate"}) else item.find("span", {"class": "instant-discount-rate"}).text,
-            "rating": item.find("em", {"class": "rating"}).text,
-            "rating_count": item.find("span", {"class": "rating-total-count"}).text
-        } for item in results[:limit]]
+
+        datas = []
+        for item in results[:limit]:
+            data = {
+                "name": item.find("dd", {"class": "descriptions"}).find("div", {"class": "name"}).text,
+                "url": "https://www.coupang.com%s" % item.find("a").get("href"),
+                "image_url": "https:%s" % item.find("dt", {"class": "image"}).find("img").get("src"),
+                "product_id": item.get("data-product-id"),
+                "is_ad": item.get("class") == "search-product__ad-badge",
+                "title_url": "https://www.coupang.com%s" % item.get("data-product-id"),
+                "price": item.find("strong", {"class": "price-value"}).text,
+                "base_price": None,
+                "discount_rate": None,
+                "rating": item.find("em", {"class": "rating"}).text,
+                "rating_count": item.find("span", {"class": "rating-total-count"}).text
+            }
+
+            if not item.find("del", {"class": "base-price"}):
+                data.update({
+                    "base_price": item.find("del", {"class": "base-price"}).text
+                })
+
+            if not item.find("span", {"class": "instant-discount-rate"}):
+                data.update({
+                    "discount_rate": item.find("span", {"class": "instant-discount-rate"}).text
+                })
+            datas.append(data)
+        return datas
 
 if __name__ == "__main__":
     parser = parser("https://www.coupang.com/np/search?component=&q=%EA%B2%80%EC%83%89&channel=user")
