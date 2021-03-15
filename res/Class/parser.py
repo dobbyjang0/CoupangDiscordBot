@@ -19,6 +19,8 @@ class parser:
     @property
     def get_items(self, input_count = 3, is_include_ads = False):
         # 아이템 그룹 파싱해옴
+        if not self.url.startswith("https://www.coupang.com/np/search?component=&q="):
+            raise TypeError
         items_group = self.bs.find("ul", {"id": "productList"}).find_all("li")
         
         # 파싱해온 그룹에서 count 갯수만큼 뽑음, 광고 제거는 선택
@@ -45,3 +47,4 @@ class parser:
 if __name__ == "__main__":
     parser=parser("https://www.coupang.com/np/search?component=&q=%EA%B2%80%EC%83%89&channel=user")
     parser.get_items(1)
+
