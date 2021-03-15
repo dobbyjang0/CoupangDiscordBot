@@ -67,10 +67,10 @@ async def Gcoupang_search(ctx):
         embed.title = "검색중이에요."
         await msg.edit(embed=embed)
         url = "https://www.coupang.com/np/search?component=&q=%s" % content
-        items = parser.parser(url)
+        Parser = parser.parser(url)
         await msg.delete()
 
-        for item in items.items[:3]:
+        for item in Parser.get_items():
             embed = discord.Embed()
             embed.set_author(name=item["name"], url=item["url"])
             embed.set_thumbnail(url=item["image_url"])

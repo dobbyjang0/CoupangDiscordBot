@@ -24,11 +24,11 @@ class parser:
         if not self.url.startswith("https://www.coupang.com/np/search?component=&q=") or not isinstance(limit, int):
             raise TypeError
 
-        if not limit <= 0:
+        if limit <= 0:
             raise IndexError
 
         items = self.bs.find("ul", {"id": "productList"}).find_all("li")
-        results = [item for item in items_group[:limit] if item.get("class") != "search-product__ad-badge" or not except_ads]
+        results = [item for item in items[:limit] if item.get("class") != "search-product__ad-badge" or not except_ads]
         return [{
             "name": item.find("dd", {"class": "descriptions"}).find("div", {"class": "name"}).text,
             "url": "https://www.coupang.com%s" % item.find("a").get("href"),
@@ -37,11 +37,11 @@ class parser:
             "is_ad": item.get("class") == "search-product__ad-badge",
             "title_url": "https://www.coupang.com%s" % item.get("data-product-id"),
             "price": item.find("strong", {"class": "price-value"}).text,
-            "base_price": item.find("del", {"class": "base-price"}).text,
-            "discount_rate": item.find("span", {"class": "instant-discount-rate"}).text,
+            "base_price": item.find("del", {"class": "base-price"}).text if item.find("del", {"class": "base-price"}) else None,
+            "discount_rate": item.find("span", {"class": "instant-discount-rate"}).text if item.find("span", {"class": "instant-discount-rate"}) else None,
             "rating": item.find("em", {"class": "rating"}).text,
             "rating_count": item.find("span", {"class": "rating-total-count"}).text
-        } for item in items[:limit]]
+        } for item in results[:limit]]
 
 if __name__ == "__main__":
     parser = parser("https://www.coupang.com/np/search?component=&q=%EA%B2%80%EC%83%89&channel=user")
