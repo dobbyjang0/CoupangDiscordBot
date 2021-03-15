@@ -44,13 +44,21 @@ class parser:
             output['is_ad'] = ('search-product__ad-badge' in item.get("class"))
             output['is_rocket'] = (item.get("data-is-rocket") != "")
             output['product_id'] = item.get("data-product-id")
-            output['title_url'] = "https://www.coupang.com"+item.get("data-product-id")
+            output['title_url'] = "https://www.coupang.com/vp/products/"+item.get("data-product-id")
             output['price'] = item.find("strong", {"class": "price-value"}).get_text()
-            output['base_price'] = item.find("del", {"class": "base-price"}).get_text()
-            output['discount_rate'] = item.find("span", {"class": "instant-discount-rate"}).get_text()
+            
+            if item.find("del", {"class": "base-price"}) is None:
+                output['base_price'] = ""
+            else:
+                output['base_price'] = item.find("del", {"class": "base-price"}).get_text()
+            
+            if item.find("span", {"class": "instant-discount-rate"}) is None:
+                output['discount_rate'] = ""
+            else:
+                output['discount_rate'] = item.find("span", {"class": "instant-discount-rate"}).get_text()
+                
             output['rating'] = item.find("em", {"class": "rating"}).get_text()
             output['rating_count'] = item.find("span", {"class": "rating-total-count"}).get_text()
-            
             output['name'] = item.find("dd", {"class": "descriptions"}).find("div", {"class": "name"}).text
             output['image_url'] = "https:%s" % item.find("dt", {"class": "image"}).find("img").get("src")
             

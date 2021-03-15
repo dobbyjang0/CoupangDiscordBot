@@ -44,7 +44,7 @@ async def Gcoupang_main(ctx):
     await ctx.send(embed=embed)
 
 @coupang.command(name="검색")
-async def Gcoupang_search(ctx):
+async def Gcoupang_search(ctx, count=3):
     embed = discord.Embed(title="상품의 이름 또는 링크를 입력해주세요.")
     msg = await ctx.send(embed=embed)
 
@@ -70,9 +70,12 @@ async def Gcoupang_search(ctx):
         items = parser.parser(url)
         await msg.delete()
 
-        for item in items.items[:3]:
-            embed = discord.Embed()
-            embed.add_field(name=item["name"], value="null")
+        item_list = items.get_items(count)
+        for item in item_list:
+            embed = discord.Embed(title=item["name"], url=item['title_url'])
+            author = ("🚀" if item["is_rocket"] else "") + item['rating'] + item['rating_count']
+            embed.set_author(name = author)
+            embed.add_field(name = item['price'], value=item['base_price']+item['discount_rate'])
             embed.set_thumbnail(url=item["image_url"])
             await ctx.send(embed=embed)
 
