@@ -37,8 +37,8 @@ class parser:
             "is_ad": item.get("class") == "search-product__ad-badge",
             "title_url": "https://www.coupang.com%s" % item.get("data-product-id"),
             "price": item.find("strong", {"class": "price-value"}).text,
-            "base_price": item.find("del", {"class": "base-price"}).text if item.find("del", {"class": "base-price"}) else None,
-            "discount_rate": item.find("span", {"class": "instant-discount-rate"}).text if item.find("span", {"class": "instant-discount-rate"}) else None,
+            "base_price": None if not item.find("del", {"class": "base-price"}) else item.find("del", {"class": "base-price"}).text,
+            "discount_rate": None if not item.find("span", {"class": "instant-discount-rate"}) else item.find("span", {"class": "instant-discount-rate"}).text,
             "rating": item.find("em", {"class": "rating"}).text,
             "rating_count": item.find("span", {"class": "rating-total-count"}).text
         } for item in results[:limit]]
