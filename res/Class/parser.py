@@ -20,40 +20,55 @@ class parser:
     def status_code(self):
         return requests.get(self.url).status_code
 
-    def get_items(self, limit=3, except_ads=True):
+    def get_items(self, limit=3, is_except_ads=True):
         #에러 처리
         if not self.url.startswith("https://www.coupang.com/np/search?component=&q=") or not isinstance(limit, int):
             raise TypeError
         if limit <= 0:
             raise IndexError
         
-        items_group = self.bs.find("ul", {"id": "productList"}).find_all("li")
+        items_page = self.bs.find("ul", {"id": "productList"})
+        if items_page is None:
+            return None
+        else:
+            items_group = self.bs.find("ul", {"id": "productList"}).find_all("li")
         
         # 파싱해온 그룹에서 count 갯수만큼 뽑음, 광고 제거는 선택
         items_list = []
         item_count = 0
         for item in items_group:
-            if ('search-product__ad-badge' not in item.get("class")) or except_ads:
+            if ('search-product__ad-badge' not in item.get("class")) or is_except_ads:
                 items_list.append(item)
                 item_count += 1
             if item_count >= limit:
                 break
-            
-        # 정보 뽑아 output 사전에 저장한다.
-        return [{
-            "name": item.find("dd", {"class": "descriptions"}).find("div", {"class": "name"}).text,
-            "url": "https://www.coupang.com%s" % item.find("a").get("href"),
-            "image_url": "https:%s" % item.find("dt", {"class": "image"}).find("img").get("src"),
-            "product_id": item.get("data-product-id"),
-            "is_ad": 'search-product__ad-badge' in item.get("class"),
-            "is_rocket": (item.get("data-is-rocket") != ""),
-            "price": item.find("strong", {"class": "price-value"}).text,
-            "base_price": item.find("del", {"class": "base-price"}).text if item.find("del", {"class": "base-price"}) != None else "",
-            "discount_rate": item.find("span", {"class": "instant-discount-rate"}).text if item.find("span", {"class": "instant-discount-rate"}) != None else "",
-            "rating": item.find("em", {"class": "rating"}).text,
-            "rating_count": item.find("span", {"class": "rating-total-count"}).text
-        } for item in items_list]
         
+        # 정보 뽑아 output 사전에 저장한다.
+        datas = []
+        def text_safety(bs):
+            if bs is None:
+                return ""
+            else:
+                return bs.text
+            
+        for item in items_list:
+            data = {
+                "name": item.find("dd", {"class": "descriptions"}).find("div", {"class": "name"}).text,
+                "url": "https://www.coupang.com%s" % item.find("a").get("href"),
+                "image_url": "https:%s" % item.find("dt", {"class": "image"}).find("img").get("src"),
+                "product_id": item.get("data-product-id"),
+                "is_ad": item.get("class") == "search-product__ad-badge",
+                "is_rocket": (item.get("data-is-rocket") != ""),
+                "price": text_safety(item.find("strong", {"class": "price-value"})),
+                "base_price": text_safety(item.find("del", {"class": "base-price"})),
+                "discount_rate": text_safety(item.find("span", {"class": "instant-discount-rate"})),
+                "rating": text_safety(item.find("em", {"class": "rating"})),
+                "rating_count": text_safety(item.find("span", {"class": "rating-total-count"}))
+            }
+                
+            datas.append(data)
+            
+        return datas
 
 if __name__ == "__main__":
     parser = parser("https://www.coupang.com/np/search?component=&q=%EA%B2%80%EC%83%89&channel=user")

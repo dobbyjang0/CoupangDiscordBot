@@ -69,13 +69,33 @@ async def Gcoupang_search(ctx, count=3):
         url = "https://www.coupang.com/np/search?component=&q=%s" % content
         cou_parser = parser.parser(url)
         await msg.delete()
-        
         item_list = cou_parser.get_items(count)
+        
+        if item_list is None:
+            await ctx.send("검색결과가 없습니다.")
+            return
+        
+        def make_rating_to_moon(rating):
+            full_moon = int(rating)
+            half_moon = rating%1
+            return "🌕" * full_moon + ("🌗" if half_moon == 0.5 else "")
+        
         for item in item_list:
+            if item['rating'] == "":
+                rating_info = ""
+            else:
+                rating_moon = make_rating_to_moon(float(item['rating']))
+                rating_info = f" {rating_moon} {item['rating_count']}"
+                
+            if item['discount_rate'] == "":
+                discount_info = "."
+            else:
+                discount_info = f"{item['discount_rate']} ~~{item['base_price']}원~~"
+            
             embed = discord.Embed(title=item["name"], url=item['url'])
-            author = ("🚀" if item["is_rocket"] else "") + f"{item['rating']} {item['rating_count']}"
+            author = ("🚀" if item["is_rocket"] else "") + rating_info
             embed.set_author(name = author)
-            embed.add_field(name = item['price']+'원', value=f"{item['discount_rate']} ~~{item['base_price']}원~~")
+            embed.add_field(name = item['price']+'원', value=discount_info)
             embed.set_thumbnail(url=item["image_url"])
             await ctx.send(embed=embed)
 
