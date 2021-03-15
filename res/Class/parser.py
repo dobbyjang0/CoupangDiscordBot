@@ -58,6 +58,7 @@ class parser:
             "rating_count": item.find("span", {"class": "rating-total-count"}).text
         } for item in items_list]
         
+
 if __name__ == "__main__":
     parser = parser("https://www.coupang.com/np/search?component=&q=%EA%B2%80%EC%83%89&channel=user")
     print(parser.get_items(1))
