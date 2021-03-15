@@ -50,7 +50,6 @@ class parser:
             "product_id": item.get("data-product-id"),
             "is_ad": 'search-product__ad-badge' in item.get("class"),
             "is_rocket": (item.get("data-is-rocket") != ""),
-            "title_url": "https://www.coupang.com%s" % item.get("data-product-id"),
             "price": item.find("strong", {"class": "price-value"}).text,
             "base_price": base_price_origin.text if base_price_origin != None else "",
             "discount_rate": discount_rate_origin.text if discount_rate_origin != None else "",
