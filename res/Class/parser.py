@@ -22,7 +22,7 @@ class parser:
 
     @property
     def items(self):
-        if not self.url.startswith("https://www.coupang.com/vp/products/"):
+        if not self.url.startswith("https://www.coupang.com/np/search?component=&q="):
             raise TypeError
         wrapper = self.bs.find("div", {"class": "search-wrapper"})
         result_count = wrapper.find("div", {"class": "search-query-result"}).find_all("strong")[1].text
@@ -33,5 +33,3 @@ class parser:
             "ad": None, # bool
             "image_url": "https:%s" % item.find("dt", {"class": "image"}).find("img").get("src")
         } for item in items]
-
-
