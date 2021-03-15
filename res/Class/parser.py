@@ -34,7 +34,7 @@ class parser:
             "url": "https://www.coupang.com%s" % item.find("a").get("href"),
             "image_url": "https:%s" % item.find("dt", {"class": "image"}).find("img").get("src"),
             "product_id": item.get("data-product-id"),
-            "is_ad": True if item.get("class") == "search-product__ad-badge" else False,
+            "is_ad": item.get("class") == "search-product__ad-badge",
             "title_url": "https://www.coupang.com%s" % item.get("data-product-id"),
             "price": item.find("strong", {"class": "price-value"}).text,
             "base_price": item.find("del", {"class": "base-price"}).text,
