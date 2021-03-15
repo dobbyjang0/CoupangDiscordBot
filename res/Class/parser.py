@@ -43,17 +43,17 @@ class parser:
         base_price_origin = item.find("del", {"class": "base-price"})
         discount_rate_origin = item.find("span", {"class": "instant-discount-rate"})
         
-
         return [{
             "name": item.find("dd", {"class": "descriptions"}).find("div", {"class": "name"}).text,
             "url": "https://www.coupang.com%s" % item.find("a").get("href"),
             "image_url": "https:%s" % item.find("dt", {"class": "image"}).find("img").get("src"),
             "product_id": item.get("data-product-id"),
             "is_ad": 'search-product__ad-badge' in item.get("class"),
+            "is_rocket": (item.get("data-is-rocket") != ""),
             "title_url": "https://www.coupang.com%s" % item.get("data-product-id"),
             "price": item.find("strong", {"class": "price-value"}).text,
-            "base_price": base_price_origin.text if base_price_origin != None else None,
-            "discount_rate": discount_rate_origin.text if discount_rate_origin != None else None,
+            "base_price": base_price_origin.text if base_price_origin != None else "",
+            "discount_rate": discount_rate_origin.text if discount_rate_origin != None else "",
             "rating": item.find("em", {"class": "rating"}).text,
             "rating_count": item.find("span", {"class": "rating-total-count"}).text
         } for item in items_list]
