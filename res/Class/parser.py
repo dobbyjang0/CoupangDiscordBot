@@ -24,8 +24,8 @@ class parser:
         #에러 처리
         if not self.url.startswith("https://www.coupang.com/np/search?component=&q=") or not isinstance(limit, int):
             raise TypeError
-        if limit > 0:
-            raise IndexError     
+        if limit <= 0:
+            raise IndexError
         
         items_group = self.bs.find("ul", {"id": "productList"}).find_all("li")
         
@@ -43,6 +43,7 @@ class parser:
         base_price_origin = item.find("del", {"class": "base-price"})
         discount_rate_origin = item.find("span", {"class": "instant-discount-rate"})
         
+
         return [{
             "name": item.find("dd", {"class": "descriptions"}).find("div", {"class": "name"}).text,
             "url": "https://www.coupang.com%s" % item.find("a").get("href"),
@@ -57,7 +58,6 @@ class parser:
             "rating_count": item.find("span", {"class": "rating-total-count"}).text
         } for item in items_list]
         
-
 if __name__ == "__main__":
     parser = parser("https://www.coupang.com/np/search?component=&q=%EA%B2%80%EC%83%89&channel=user")
     print(parser.get_items(1))

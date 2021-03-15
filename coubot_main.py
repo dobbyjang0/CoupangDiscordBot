@@ -67,15 +67,15 @@ async def Gcoupang_search(ctx, count=3):
         embed.title = "검색중이에요."
         await msg.edit(embed=embed)
         url = "https://www.coupang.com/np/search?component=&q=%s" % content
-        items = parser.parser(url)
+        cou_parser = parser.parser(url)
         await msg.delete()
-
-        item_list = items.get_items(count)
+        
+        item_list = cou_parser.get_items(count)
         for item in item_list:
             embed = discord.Embed(title=item["name"], url=item['title_url'])
-            author = ("🚀" if item["is_rocket"] else "") + item['rating'] + item['rating_count']
+            author = ("🚀" if item["is_rocket"] else "") + item['rating'] + ' ' + item['rating_count']
             embed.set_author(name = author)
-            embed.add_field(name = item['price'], value=item['base_price']+item['discount_rate'])
+            embed.add_field(name = item['price']+'원', value=item['base_price']+'원 '+item['discount_rate'])
             embed.set_thumbnail(url=item["image_url"])
             await ctx.send(embed=embed)
 
