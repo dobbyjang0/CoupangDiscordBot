@@ -75,7 +75,7 @@ async def Gcoupang_search(ctx, count=3):
             embed = discord.Embed(title=item["name"], url=item['url'])
             author = ("🚀" if item["is_rocket"] else "") + f"{item['rating']} {item['rating_count']}"
             embed.set_author(name = author)
-            embed.add_field(name = item['price']+'원', value=f"{item['discount_rate']} ~{item['base_price']}원~")
+            embed.add_field(name = item['price']+'원', value=f"{item['discount_rate']} ~~{item['base_price']}원~~")
             embed.set_thumbnail(url=item["image_url"])
             await ctx.send(embed=embed)
 
