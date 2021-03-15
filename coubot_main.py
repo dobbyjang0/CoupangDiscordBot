@@ -76,6 +76,7 @@ async def Gcoupang_search(ctx):
             embed.set_image(url=item["image_url"])
             await ctx.send(embed=embed)
 
+# 킬 관련 커맨드
 async def get_appinfo():
     return await bot.application_info()
 

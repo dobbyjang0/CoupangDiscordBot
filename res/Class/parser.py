@@ -17,11 +17,31 @@ class parser:
         return bs4.BeautifulSoup(html, 'lxml')
 
     @property
-    def items(self):
-        wrapper = self.bs.find("div", {"class": "search-wrapper"})
-        result_count = wrapper.find("div", {"class": "search-query-result"}).find_all("strong")[1].text
-        items = wrapper.find("ul", {"class": "search-product-list"}).find_all("li")
-        return [{
-            "name": item.find("dd", {"class": "descriptions"}).find("div", {"class": "name"}).text,
-            "image_url": "https:%s" % item.find("dt", {"class": "image"}).find("img").get("src")
-        } for item in items]
+    def get_items(self, input_count = 3, is_include_ads = False):
+        # 아이템 그룹 파싱해옴
+        items_group = self.bs.find("ul", {"id": "productList"}).find_all("li")
+        
+        # 파싱해온 그룹에서 count 갯수만큼 뽑음, 광고 제거는 선택
+        items_list = []
+        item_count = 0
+        for item in items_group:
+            if ('search-product__ad-badge' not in item.get("class")) or is_include_ads:
+                items_list.append(item)
+                item_count += 1
+                print(item_count)
+            if item_count >= input_count:
+                break
+            
+        # 정보 뽑아 output 사전에 저장한다.
+        for item in items_list:
+            name = item.find("dd", {"class": "descriptions"}).find("div", {"class": "name"}).text
+            image_url = "https:%s" % item.find("dt", {"class": "image"}).find("img").get("src")
+            output = {"name" : name, "image_url" : image_url
+                }
+            
+        return output
+
+
+if __name__ == "__main__":
+    parser=parser("https://www.coupang.com/np/search?component=&q=%EA%B2%80%EC%83%89&channel=user")
+    parser.get_items(1)
