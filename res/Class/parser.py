@@ -15,8 +15,11 @@ class parser:
         session = requests.Session()
         html = session.get(self.url, headers=self.hdr).content
         return bs4.BeautifulSoup(html, 'lxml')
-
+    
     @property
+    def status_code(self):
+        return requests.get(self.url).status_code
+    
     def get_items(self, input_count = 3, is_include_ads = False):
         # 아이템 그룹 파싱해옴
         if not self.url.startswith("https://www.coupang.com/np/search?component=&q="):
@@ -30,21 +33,33 @@ class parser:
             if ('search-product__ad-badge' not in item.get("class")) or is_include_ads:
                 items_list.append(item)
                 item_count += 1
-                print(item_count)
             if item_count >= input_count:
                 break
             
         # 정보 뽑아 output 사전에 저장한다.
+        output_list = []
         for item in items_list:
-            name = item.find("dd", {"class": "descriptions"}).find("div", {"class": "name"}).text
-            image_url = "https:%s" % item.find("dt", {"class": "image"}).find("img").get("src")
-            output = {"name" : name, "image_url" : image_url
-                }
+            #광고인지 아닌지
+            output={}
+            output['is_ad'] = ('search-product__ad-badge' in item.get("class"))
+            output['is_rocket'] = (item.get("data-is-rocket") != "")
+            output['product_id'] = item.get("data-product-id")
+            output['title_url'] = "https://www.coupang.com"+item.get("data-product-id")
+            output['price'] = item.find("strong", {"class": "price-value"}).get_text()
+            output['base_price'] = item.find("del", {"class": "base-price"}).get_text()
+            output['discount_rate'] = item.find("span", {"class": "instant-discount-rate"}).get_text()
+            output['rating'] = item.find("em", {"class": "rating"}).get_text()
+            output['rating_count'] = item.find("span", {"class": "rating-total-count"}).get_text()
             
-        return output
+            output['name'] = item.find("dd", {"class": "descriptions"}).find("div", {"class": "name"}).text
+            output['image_url'] = "https:%s" % item.find("dt", {"class": "image"}).find("img").get("src")
+            
+            output_list.append(output)
+            
+        return output_list
 
 
 if __name__ == "__main__":
     parser=parser("https://www.coupang.com/np/search?component=&q=%EA%B2%80%EC%83%89&channel=user")
-    parser.get_items(1)
+    print(parser.get_items(1))
 
