@@ -20,25 +20,36 @@ class parser:
     def status_code(self):
         return requests.get(self.url).status_code
 
-    def get_items(self, limit=3, except_ads=True):
-        if not self.url.startswith("https://www.coupang.com/np/search?component=&q=") or not isinstance(limit, int):
+    def get_items(self, limit=3, is_except_ads=True):
+        if not self.url.startswith("https://www.coupang.com/np/search?component=&q="):
             raise TypeError
 
+        assert isinstance(limit, int), "정수가 아닙니다."
         if limit <= 0:
             raise IndexError
 
-        items = self.bs.find("ul", {"id": "productList"}).find_all("li")
-        results = [item for item in items[:limit] if item.get("class") != "search-product__ad-badge" or not except_ads]
+        items_page = self.bs.find("ul", {"id": "productList"})
+        if not items_page:
+            raise
+        else:
+            items_group = items_page.find_all("li")
+
+
+        items = []
+        while limit:
+            if item.get("class") != 'search-product__ad-badge' or is_except_ads:
+                items.append(item)
+                limit -= 1
 
         datas = []
-        for item in results[:limit]:
+        for item in items:
             data = {
                 "name": item.find("dd", {"class": "descriptions"}).find("div", {"class": "name"}).text,
                 "url": "https://www.coupang.com%s" % item.find("a").get("href"),
                 "image_url": "https:%s" % item.find("dt", {"class": "image"}).find("img").get("src"),
                 "product_id": item.get("data-product-id"),
                 "is_ad": item.get("class") == "search-product__ad-badge",
-                "title_url": "https://www.coupang.com%s" % item.get("data-product-id"),
+                "is_rocket": item.get("data-is-rocket") != "",
                 "price": item.find("strong", {"class": "price-value"}).text,
                 "base_price": None,
                 "discount_rate": None,
@@ -46,14 +57,14 @@ class parser:
                 "rating_count": item.find("span", {"class": "rating-total-count"}).text
             }
 
-            if not item.find("del", {"class": "base-price"}):
+            if (base_price := item.find("del", {"class": "base-price"})):
                 data.update({
-                    "base_price": item.find("del", {"class": "base-price"}).text
+                    "base_price": base_price.text
                 })
 
-            if not item.find("span", {"class": "instant-discount-rate"}):
+            if (discount_rate := item.find("span", {"class": "instant-discount-rate"})):
                 data.update({
-                    "discount_rate": item.find("span", {"class": "instant-discount-rate"}).text
+                    "discount_rate": discount_rate.text
                 })
             datas.append(data)
         return datas

@@ -71,8 +71,8 @@ async def Gcoupang_search(ctx):
         await msg.delete()
 
         for item in Parser.get_items():
-            embed = discord.Embed()
-            embed.set_author(name=item["name"], url=item["url"])
+            embed = discord.Embed(title=item["name"], url=item['url'])
+            embed.set_author(name="%s%s%s원~" % ("🚀" if item["is_rocket"] else "", item['rating'], item['rating_count']))
             embed.set_thumbnail(url=item["image_url"])
             await ctx.send(embed=embed)
 
