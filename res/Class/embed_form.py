@@ -4,10 +4,10 @@ import discord
 from .errors import NoneFormname
 
 def embed_factory(form_name, *arg, **kwargs):
-    result = getattr(sys.modules[__name__], form_name)
-    if result:
-        return result(*arg, **kwargs)
-    raise NoneFormname(form_name)
+    try:
+        return getattr(sys.modules[__name__], form_name)(*arg, **kwargs)
+    except AttributeError:
+        raise NoneFormname(form_name)
     
 #아래의 form들은 모두 이 클래스를 상속할 것
 class formbase:
@@ -17,16 +17,16 @@ class formbase:
         if arg and kwarg:
             self.insert(*arg, **kwarg)
 
-    def init_make(self):
+    def init_make(cls):
         pass
 
-    def insert(self, *arg, **kwarg):
+    def insert(cls, *arg, **kwarg):
         pass
 
     @property
     def get(self):
         return self.embed
-        
+
 # 처음에 안바뀌는건 init_make, 처음에 값을 넣어줘야 되는건 insert에서 해줘야함
 # 더 좋은 구조 있으면 추천받음
 class coupang_main(formbase):
@@ -45,10 +45,9 @@ class coupang_main(formbase):
 
 class serch_output_simple(formbase):
     def insert(self, name, url, price, image_url, is_rocket, rating, rating_count, discount_rate, base_price, **kwarg):
-        def make_rating_to_moon(rating):
-            full_moon = int(rating)
-            half_moon = rating%1
-            return "🌕" * full_moon + ("🌗" if half_moon == 0.5 else "")
+        def make_rating_to_moon(rating:int):
+            half_moon = rating % 1
+            return "🌕" * rating + "🌗" if half_moon == 0.5 else ""
         
         if rating == "":
             rating_info = ""
@@ -72,6 +71,7 @@ class serch_output_simple(formbase):
 class serch_waiting(formbase):
     def init_make(self):
         self.embed.title = "상품의 이름 또는 링크를 입력해주세요."
+
     def insert(self, *arg, **kwarg):
         if arg is not None and kwarg is not None:
             self.embed.set_footer(text="듣고 있어요. 편하게 말씀해주세요!")
@@ -95,4 +95,4 @@ class kill_canceled(formbase):
         self.embed.title = "종료를 취소합니다."
         
 if __name__ == "__main__":
-    print(embed_factory("kill_count",3).embed.title)
+    print(embed_factory("kill_count", 3).embed.title)
