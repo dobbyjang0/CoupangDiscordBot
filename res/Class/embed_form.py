@@ -65,7 +65,7 @@ class serch_output_simple(formbase):
         self.embed.url = url
         author = ("🚀" if is_rocket else "") + rating_info
         self.embed.set_author(name = author)
-        self.embed.add_field(name = price+'원', value=discount_info)
+        self.embed.add_field(name="%s원" % price, value=discount_info)
         self.embed.set_thumbnail(url=image_url)
     
 
