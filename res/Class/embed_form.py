@@ -1,11 +1,13 @@
+import sys
 import discord
 
-def embed_factory(form_name, *arg, **kwarg):
-    
-        #이 부분 조심하기
-    output = eval(form_name)(*arg, **kwarg)
-    return output
+from .errors import NoneFormname
 
+def embed_factory(form_name, *arg, **kwargs):
+    result = getattr(sys.modules[__name__], form_name)
+    if result:
+        return result(*arg, **kwargs)
+    raise NoneFormname(form_name)
     
 #아래의 form들은 모두 이 클래스를 상속할 것
 class formbase:
