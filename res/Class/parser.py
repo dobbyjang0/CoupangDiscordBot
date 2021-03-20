@@ -8,7 +8,10 @@ class parser:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
         }
-        self.hdr = self.header
+
+    @property
+    def hdr(self):
+        return self.header
 
     @property
     def bs(self):
@@ -21,28 +24,37 @@ class parser:
         return requests.get(self.url).status_code
 
     def get_items(self, limit=3, is_except_ads=True):
-        if not self.url.startswith("https://www.coupang.com/np/search?component=&q="):
+        #에러 처리
+        if not self.url.startswith("https://www.coupang.com/np/search?component=&q=") or not isinstance(limit, int):
             raise TypeError
-
-        assert isinstance(limit, int), "정수가 아닙니다."
         if limit <= 0:
             raise IndexError
-
+        
         items_page = self.bs.find("ul", {"id": "productList"})
-        if not items_page:
-            raise
+        if items_page is None:
+            return None
         else:
-            items_group = items_page.find_all("li")
-
-
-        items = []
-        while limit:
-            if item.get("class") != 'search-product__ad-badge' or is_except_ads:
-                items.append(item)
-                limit -= 1
-
+            items_group = self.bs.find("ul", {"id": "productList"}).find_all("li")
+        
+        # 파싱해온 그룹에서 count 갯수만큼 뽑음, 광고 제거는 선택
+        items_list = []
+        item_count = 0
+        for item in items_group:
+            if ('search-product__ad-badge' not in item.get("class")) or is_except_ads:
+                items_list.append(item)
+                item_count += 1
+            if item_count >= limit:
+                break
+        
+        # 정보 뽑아 output 사전에 저장한다.
         datas = []
-        for item in items:
+        def text_safety(bs):
+            if not bs:
+                return ""
+            else:
+                return bs.text
+            
+        for item in items_list:
             data = {
                 "name": item.find("dd", {"class": "descriptions"}).find("div", {"class": "name"}).text,
                 "url": "https://www.coupang.com%s" % item.find("a").get("href"),
@@ -50,23 +62,15 @@ class parser:
                 "product_id": item.get("data-product-id"),
                 "is_ad": item.get("class") == "search-product__ad-badge",
                 "is_rocket": item.get("data-is-rocket") != "",
-                "price": item.find("strong", {"class": "price-value"}).text,
-                "base_price": None,
-                "discount_rate": None,
-                "rating": item.find("em", {"class": "rating"}).text,
-                "rating_count": item.find("span", {"class": "rating-total-count"}).text
+                "price": text_safety(item.find("strong", {"class": "price-value"})),
+                "base_price": text_safety(item.find("del", {"class": "base-price"})),
+                "discount_rate": text_safety(item.find("span", {"class": "instant-discount-rate"})),
+                "rating": text_safety(item.find("em", {"class": "rating"})),
+                "rating_count": text_safety(item.find("span", {"class": "rating-total-count"}))
             }
-
-            if (base_price := item.find("del", {"class": "base-price"})):
-                data.update({
-                    "base_price": base_price.text
-                })
-
-            if (discount_rate := item.find("span", {"class": "instant-discount-rate"})):
-                data.update({
-                    "discount_rate": discount_rate.text
-                })
+                
             datas.append(data)
+            
         return datas
 
 if __name__ == "__main__":
