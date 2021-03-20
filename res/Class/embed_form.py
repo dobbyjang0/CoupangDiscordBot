@@ -47,8 +47,9 @@ class serch_output_simple(formbase):
     def insert(self, name, url, price, image_url, is_rocket, rating,
                rating_count, discount_rate, base_price, **kwarg):
         def make_rating_to_moon(rating:float):
+            full_moon = int(rating)
             half_moon = rating % 1
-            return "🌕" * int(rating) + "🌗" if half_moon == 0.5 else ""
+            return "🌕" * full_moon + "🌗" if half_moon == 0.5 else ""
         
         if rating == "":
             rating_info = ""
