@@ -17,10 +17,10 @@ class formbase:
         if arg and kwarg:
             self.insert(*arg, **kwarg)
 
-    def init_make(cls):
+    def init_make(self):
         pass
 
-    def insert(cls, *arg, **kwarg):
+    def insert(self, *arg, **kwarg):
         pass
 
     @property
@@ -44,10 +44,11 @@ class coupang_main(formbase):
         self.embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/804815694717911080/817096183637344286/img.png")
 
 class serch_output_simple(formbase):
-    def insert(self, name, url, price, image_url, is_rocket, rating, rating_count, discount_rate, base_price, **kwarg):
-        def make_rating_to_moon(rating:int):
+    def insert(self, name, url, price, image_url, is_rocket, rating,
+               rating_count, discount_rate, base_price, **kwarg):
+        def make_rating_to_moon(rating):
             half_moon = rating % 1
-            return "🌕" * rating + "🌗" if half_moon == 0.5 else ""
+            return "🌕" * int(rating) + "🌗" if half_moon == 0.5 else ""
         
         if rating == "":
             rating_info = ""
