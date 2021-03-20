@@ -25,10 +25,11 @@ class parser:
 
     def get_items(self, limit=3, is_except_ads=True):
         #에러 처리
-        if not self.url.startswith("https://www.coupang.com/np/search?component=&q=") or not isinstance(limit, int):
+        if not self.url.startswith("https://www.coupang.com/np/search?component=&q="):
             raise TypeError
-        if limit <= 0:
-            raise IndexError
+
+        assert isinstance(limit, int), "limit은 정수여야합니다."
+        assert limit <= 0, "limit은 0보다 커야합니다."
         
         items_page = self.bs.find("ul", {"id": "productList"})
         if items_page is None:
