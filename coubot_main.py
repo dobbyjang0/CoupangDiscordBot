@@ -63,7 +63,10 @@ async def Gcoupang_search(ctx, count=3):
             return
 
         for item in item_list:
-            await ctx.send(embed=embed_maker("serch_output_simple",**item).get)
+            msg = await ctx.send(embed=embed_maker("serch_output_simple",**item).get)
+            await msg.add_reaction("🔍")
+            await msg.add_reaction("🔔")
+            await msg.add_reaction("📥")
             
 # 킬 관련 커맨드
 async def get_appinfo():
