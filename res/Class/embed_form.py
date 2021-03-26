@@ -28,7 +28,6 @@ class formbase:
         return self.embed
 
 # 처음에 안바뀌는건 init_make, 처음에 값을 넣어줘야 되는건 insert에서 해줘야함
-# 더 좋은 구조 있으면 추천받음
 class coupang_main(formbase):
     def init_make(self):
         descriptions = {

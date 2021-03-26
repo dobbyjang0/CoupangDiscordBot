@@ -7,7 +7,7 @@ import bs4
 import requests
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
-
+from res.Class.embed_form import embed_factory as embed_maker
 from res.Class import parser
 
 nest_asyncio.apply()
@@ -32,25 +32,16 @@ async def coupang(ctx):
 
 @coupang.command(name="메인", aliases=["기본", "홈"])
 async def Gcoupang_main(ctx):
-    descriptions = {
-        "골드박스": "https://coupa.ng/bSQUxy",
-        "로켓프레쉬": "https://coupa.ng/bSQUDh",
-        "로켓와우": "https://coupa.ng/bSQUFP",
-        "로켓직구": "https://coupa.ng/bSQUJ4",
-        "로켓배송": "https://coupa.ng/bSQUMW"
-    }
-    embed = discord.Embed(title="쿠팡", description="\n".join("▶ [**%s**](<%s>)" % (k, v) for k, v in descriptions.items()), url="https://coupa.ng/bSQJi8")
-    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/804815694717911080/817096183637344286/img.png")
-    await ctx.send(embed=embed)
+    await ctx.send(embed=embed_maker("coupang_main").get)
 
 @coupang.command(name="검색")
 async def Gcoupang_search(ctx, count=3):
-    embed = discord.Embed(title="상품의 이름 또는 링크를 입력해주세요.")
-    msg = await ctx.send(embed=embed)
-
+    embed_waiting = embed_maker("serch_waiting")
+    msg = await ctx.send(embed=embed_waiting.get)
+    
     async with ctx.typing():
-        embed.set_footer(text="듣고 있어요. 편하게 말씀해주세요!")
-        await msg.edit(embed=embed)
+        embed_waiting.insert("go")
+        await msg.edit(embed=embed_waiting.get)
         wait_m = await bot.wait_for('message', check=lambda m: m.author == ctx.author and m.channel == ctx.channel)
 
     content = wait_m.content
@@ -58,14 +49,10 @@ async def Gcoupang_search(ctx, count=3):
         if content.startswith("https://www.coupang.com/vp/products/"):
             pass
         else:
-            embed.title = "이런!"
-            embed.description = "올바른 쿠팡 상품 링크가 아닌 것 같아요."
-            embed.color = discord.Colour.red()
-            await msg.edit(embed=embed)
+            await msg.edit(embed=embed_maker("serch_oops").get)
     else:
-        embed.set_footer(text=discord.Embed.Empty)
-        embed.title = "검색중이에요."
-        await msg.edit(embed=embed)
+        await msg.edit(embed=embed_maker("serch_ing").get)
+        
         url = "https://www.coupang.com/np/search?component=&q=%s" % content
         cou_parser = parser.parser(url)
         await msg.delete()
@@ -74,31 +61,10 @@ async def Gcoupang_search(ctx, count=3):
         if item_list is None:
             await ctx.send("검색결과가 없습니다.")
             return
-        
-        def make_rating_to_moon(rating):
-            full_moon = int(rating)
-            half_moon = rating%1
-            return "🌕" * full_moon + ("🌗" if half_moon == 0.5 else "")
-        
-        for item in item_list:
-            if item['rating'] == "":
-                rating_info = ""
-            else:
-                rating_moon = make_rating_to_moon(float(item['rating']))
-                rating_info = f" {rating_moon} {item['rating_count']}"
-                
-            if item['discount_rate'] == "":
-                discount_info = "."
-            else:
-                discount_info = f"{item['discount_rate']} ~~{item['base_price']}원~~"
-            
-            embed = discord.Embed(title=item["name"], url=item['url'])
-            author = ("🚀" if item["is_rocket"] else "") + rating_info
-            embed.set_author(name = author)
-            embed.add_field(name = item['price']+'원', value=discount_info)
-            embed.set_thumbnail(url=item["image_url"])
-            await ctx.send(embed=embed)
 
+        for item in item_list:
+            await ctx.send(embed=embed_maker("serch_output_simple",**item).get)
+            
 # 킬 관련 커맨드
 async def get_appinfo():
     return await bot.application_info()
@@ -115,8 +81,8 @@ def is_teamembers():
 async def kill_bot(ctx):
     global timer
     timer = 5
-    embed = discord.Embed(title="봇이 %d 초 후 종료됩니다." % timer)
-    msg = await ctx.send(embed=embed)
+    embed_timer = embed_maker("kill_count", timer)
+    msg = await ctx.send(embed=embed_timer.get)
 
     async def countdown():
         global timer
@@ -125,8 +91,8 @@ async def kill_bot(ctx):
         while timer:
             timer -= 1
             await asyncio.sleep(1.0)
-            embed.title = "봇이 %d 초 후 종료됩니다." % timer
-            await msg.edit(embed=embed)
+            embed_timer.insert(timer)
+            await msg.edit(embed=embed_timer.get)
         return False
 
     done, pending = await asyncio.wait([
@@ -141,8 +107,7 @@ async def kill_bot(ctx):
         await msg.delete()
         await bot.close()
     else:
-        embed.title = "종료를 취소합니다."
-        await msg.edit(embed=embed, delete_after=5)
+        await msg.edit(embed=embed_maker("kill_canceled").get, delete_after=5)
 
 if __name__ == "__main__":
     bot.run(os.getenv('DISCORD_TOKEN'))
