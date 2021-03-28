@@ -73,7 +73,22 @@ class parser:
             datas.append(data)
             
         return datas
+    
+    def get_item_detail(self):
+        #에러 처리
+        if not self.url.startswith("https://www.coupang.com/vp/products/"):
+            raise TypeError
+        item = self.bs.find("div", {"class": "prod-atf"})
+        
+        price = item.find("span", {"class": "total-price"}).get_text(strip=True)
+        price = price.replace(',','')
+        price = price.replace('원','')
+        price = int(price)
+        
+        data = {'price': price
+            }
+        return data
 
 if __name__ == "__main__":
-    parser = parser("https://www.coupang.com/np/search?component=&q=%EA%B2%80%EC%83%89&channel=user")
-    print(parser.get_items(1))
+    parser = parser("https://www.coupang.com/vp/products/286438028")
+    print(parser.get_item_detail())
