@@ -16,6 +16,10 @@ nest_asyncio.apply()
 bot = commands.Bot(command_prefix="!")
 load_dotenv("token.env")
 
+extensions = [
+    #cogs
+]
+
 @bot.event
 async def on_ready():
     print("--- 연결 성공 ---")
@@ -39,7 +43,7 @@ async def Gcoupang_main(ctx):
 async def Gcoupang_search(ctx, count=3):
     embed_waiting = embed_maker("serch_waiting")
     msg = await ctx.send(embed=embed_waiting.get)
-
+    
     async with ctx.typing():
         embed_waiting.insert("go")
         await msg.edit(embed=embed_waiting.get)
@@ -53,6 +57,7 @@ async def Gcoupang_search(ctx, count=3):
             await msg.edit(embed=embed_maker("serch_oops").get)
     else:
         await msg.edit(embed=embed_maker("serch_ing").get)
+        
         url = "https://www.coupang.com/np/search?component=&q=%s" % content
         cou_parser = parser.parser(url)
         await msg.delete()
@@ -61,9 +66,12 @@ async def Gcoupang_search(ctx, count=3):
         if item_list is None:
             await ctx.send("검색결과가 없습니다.")
             return
-        
+
         for item in item_list:
-            await ctx.send(embed=embed_maker("serch_output_simple",**item).get)
+            msg = await ctx.send(embed=embed_maker("serch_output_simple",**item).get)
+            await msg.add_reaction("🔍")
+            await msg.add_reaction("🔔")
+            await msg.add_reaction("📥")
 
 # 킬 관련 커맨드
 async def get_appinfo():
@@ -110,4 +118,13 @@ async def kill_bot(ctx):
         await msg.edit(embed=embed_maker("kill_canceled").get, delete_after=5)
 
 if __name__ == "__main__":
+    for extension in extensions:
+        try:
+            bot.load_extension(extension)
+            print('loaded %s' % extension)
+        except Exception as error:
+            print('fail to load %s: %s' % (extension, error))
+        else:
+            print('loaded %s' % extension)
+
     bot.run(os.getenv('DISCORD_TOKEN'))
