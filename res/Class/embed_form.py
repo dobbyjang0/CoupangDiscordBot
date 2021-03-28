@@ -45,7 +45,8 @@ class coupang_main(formbase):
 class serch_output_simple(formbase):
     def insert(self, name, url, price, image_url, is_rocket, rating,
                rating_count, discount_rate, base_price, **kwarg):
-        def make_rating_to_moon(rating:float):
+        def make_rating_to_moon(rating: float) -> str:
+            rating = float(rating)
             full_moon = int(rating)
             half_moon = rating % 1
             return "🌕" * full_moon + ("🌗" if half_moon == 0.5 else "")
