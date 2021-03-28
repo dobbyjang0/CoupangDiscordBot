@@ -3,20 +3,18 @@ import discord
 
 from .errors import NoneFormname
 
-           
 def embed_factory(form_name, *arg, **kwargs):
     try:
         return getattr(sys.modules[__name__], form_name)(*arg, **kwargs)
     except AttributeError:
         raise NoneFormname(form_name)
-
     
 #아래의 form들은 모두 이 클래스를 상속할 것
 class formbase:
     def __init__(self, *arg, **kwarg):
         self.embed = discord.Embed()
         self.init_make()
-        if arg is not None and kwarg is not None:
+        if arg and kwarg:
             self.insert(*arg, **kwarg)
 
     def init_make(self):
@@ -30,6 +28,7 @@ class formbase:
         return self.embed
 
 # 처음에 안바뀌는건 init_make, 처음에 값을 넣어줘야 되는건 insert에서 해줘야함
+# 더 좋은 구조 있으면 추천받음
 class coupang_main(formbase):
     def init_make(self):
         descriptions = {
@@ -47,15 +46,14 @@ class coupang_main(formbase):
 class serch_output_simple(formbase):
     def insert(self, name, url, price, image_url, is_rocket, rating,
                rating_count, discount_rate, base_price, **kwarg):
-        def make_rating_to_moon(rating):
-            full_moon = int(rating)
+        def make_rating_to_moon(rating:float):
             half_moon = rating % 1
-            return "🌕" * full_moon + ("🌗" if half_moon == 0.5 else "")
+            return "🌕" * int(rating) + "🌗" if half_moon == 0.5 else ""
         
         if rating == "":
             rating_info = ""
         else:
-            rating_moon = make_rating_to_moon(float(rating))
+            rating_moon = make_rating_to_moon(rating)
             rating_info = f" {rating_moon} {rating_count}"
             
         if discount_rate == "":
@@ -76,7 +74,8 @@ class serch_waiting(formbase):
         self.embed.title = "상품의 이름 또는 링크를 입력해주세요."
 
     def insert(self, *arg, **kwarg):
-        self.embed.set_footer(text="듣고 있어요. 편하게 말씀해주세요!")
+        if arg is not None and kwarg is not None:
+            self.embed.set_footer(text="듣고 있어요. 편하게 말씀해주세요!")
 
 class serch_ing(formbase):
     def init_make(self):
@@ -97,4 +96,4 @@ class kill_canceled(formbase):
         self.embed.title = "종료를 취소합니다."
         
 if __name__ == "__main__":
-    print(embed_factory("kill_count", 5).embed.title)
+    print(embed_factory("kill_count", 3).embed.title)

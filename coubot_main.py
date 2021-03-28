@@ -7,8 +7,9 @@ import bs4
 import requests
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
-from res.Class.embed_form import embed_factory as embed_maker
+
 from res.Class import parser
+from res.Class.embed_form import embed_factory as embed_maker
 
 nest_asyncio.apply()
 
@@ -38,7 +39,7 @@ async def Gcoupang_main(ctx):
 async def Gcoupang_search(ctx, count=3):
     embed_waiting = embed_maker("serch_waiting")
     msg = await ctx.send(embed=embed_waiting.get)
-    
+
     async with ctx.typing():
         embed_waiting.insert("go")
         await msg.edit(embed=embed_waiting.get)
@@ -52,7 +53,6 @@ async def Gcoupang_search(ctx, count=3):
             await msg.edit(embed=embed_maker("serch_oops").get)
     else:
         await msg.edit(embed=embed_maker("serch_ing").get)
-        
         url = "https://www.coupang.com/np/search?component=&q=%s" % content
         cou_parser = parser.parser(url)
         await msg.delete()
@@ -61,13 +61,10 @@ async def Gcoupang_search(ctx, count=3):
         if item_list is None:
             await ctx.send("검색결과가 없습니다.")
             return
-
+        
         for item in item_list:
-            msg = await ctx.send(embed=embed_maker("serch_output_simple",**item).get)
-            await msg.add_reaction("🔍")
-            await msg.add_reaction("🔔")
-            await msg.add_reaction("📥")
-            
+            await ctx.send(embed=embed_maker("serch_output_simple",**item).get)
+
 # 킬 관련 커맨드
 async def get_appinfo():
     return await bot.application_info()

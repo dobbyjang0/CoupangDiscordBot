@@ -29,7 +29,7 @@ class parser:
             raise TypeError
 
         assert isinstance(limit, int), "limit은 정수여야합니다."
-        assert limit >= 0, "limit은 0보다 커야합니다."
+        assert limit <= 0, "limit은 0보다 커야합니다."
         
         items_page = self.bs.find("ul", {"id": "productList"})
         if items_page is None:
