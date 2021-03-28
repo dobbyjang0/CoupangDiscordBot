@@ -49,6 +49,11 @@ async def Gcoupang_search(ctx, count=3):
         await msg.edit(embed=embed_waiting.get)
         wait_m = await bot.wait_for('message', check=lambda m: m.author == ctx.author and m.channel == ctx.channel)
 
+    try:
+        await wait_m.delete()
+    except discord.Forbidden:
+        pass
+
     content = wait_m.content
     if content.startswith("https://"):
         if content.startswith("https://www.coupang.com/vp/products/"):
@@ -67,11 +72,12 @@ async def Gcoupang_search(ctx, count=3):
             await ctx.send("검색결과가 없습니다.")
             return
 
+        emojis = ["🔍", "🔔", "📥"]
         for item in item_list:
             msg = await ctx.send(embed=embed_maker("serch_output_simple",**item).get)
-            await msg.add_reaction("🔍")
-            await msg.add_reaction("🔔")
-            await msg.add_reaction("📥")
+            for emoji in emojis:
+                await msg.add_reaction(emoji)
+        reaction, user = await bot.wait_for("reaction_add", check=lambda r, u: r.emoji in emojis and r.me is True)
 
 # 킬 관련 커맨드
 async def get_appinfo():

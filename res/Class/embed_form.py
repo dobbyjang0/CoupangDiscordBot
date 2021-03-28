@@ -57,18 +57,17 @@ class serch_output_simple(formbase):
             rating_moon = make_rating_to_moon(rating)
             rating_info = f" {rating_moon} {rating_count}"
             
+        price_text: str = "**%s원**" % price
         if discount_rate == "":
-            discount_info = "."
+            self.embed.description = price_text
         else:
-            discount_info = f"{discount_rate} ~~{base_price}원~~"
+            self.embed.description = price_text + f"\n{discount_rate} ~~{base_price}원~~"
         
         self.embed.title = name
         self.embed.url = url
         author = ("🚀" if is_rocket else "") + rating_info
         self.embed.set_author(name = author)
-        self.embed.add_field(name="%s원" % price, value=discount_info)
         self.embed.set_thumbnail(url=image_url)
-    
 
 class serch_waiting(formbase):
     def init_make(self):
