@@ -3,7 +3,7 @@ import discord
 
 from .errors import NoneFormname
 
-       
+           
 def embed_factory(form_name, *arg, **kwargs):
     try:
         return getattr(sys.modules[__name__], form_name)(*arg, **kwargs)
