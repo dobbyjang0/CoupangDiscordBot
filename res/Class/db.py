@@ -75,3 +75,4 @@ class AlarmTable:
         self.connection.execute(sql, guild_id=guild_id, channel_id=channel_id, author_id=author_id, product_code=product_code, product_value=product_value)
     
     
+

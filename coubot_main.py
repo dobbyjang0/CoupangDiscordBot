@@ -7,13 +7,18 @@ import bs4
 import requests
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
-from res.Class.embed_form import embed_factory as embed_maker
+
 from res.Class import parser
+from res.Class.embed_form import embed_factory as embed_maker
 
 nest_asyncio.apply()
 
 bot = commands.Bot(command_prefix="!")
 load_dotenv("token.env")
+
+extensions = [
+    #cogs
+]
 
 @bot.event
 async def on_ready():
@@ -44,6 +49,11 @@ async def Gcoupang_search(ctx, count=3):
         await msg.edit(embed=embed_waiting.get)
         wait_m = await bot.wait_for('message', check=lambda m: m.author == ctx.author and m.channel == ctx.channel)
 
+    try:
+        await wait_m.delete()
+    except discord.Forbidden:
+        pass
+
     content = wait_m.content
     if content.startswith("https://"):
         if content.startswith("https://www.coupang.com/vp/products/"):
@@ -62,12 +72,13 @@ async def Gcoupang_search(ctx, count=3):
             await ctx.send("검색결과가 없습니다.")
             return
 
+        emojis = ["🔍", "🔔", "📥"]
         for item in item_list:
             msg = await ctx.send(embed=embed_maker("serch_output_simple",**item).get)
-            await msg.add_reaction("🔍")
-            await msg.add_reaction("🔔")
-            await msg.add_reaction("📥")
-            
+            for emoji in emojis:
+                await msg.add_reaction(emoji)
+        reaction, user = await bot.wait_for("reaction_add", check=lambda r, u: r.emoji in emojis and r.me is True)
+
 # 킬 관련 커맨드
 async def get_appinfo():
     return await bot.application_info()
@@ -113,4 +124,13 @@ async def kill_bot(ctx):
         await msg.edit(embed=embed_maker("kill_canceled").get, delete_after=5)
 
 if __name__ == "__main__":
+    for extension in extensions:
+        try:
+            bot.load_extension(extension)
+            print('loaded %s' % extension)
+        except Exception as error:
+            print('fail to load %s: %s' % (extension, error))
+        else:
+            print('loaded %s' % extension)
+
     bot.run(os.getenv('DISCORD_TOKEN'))

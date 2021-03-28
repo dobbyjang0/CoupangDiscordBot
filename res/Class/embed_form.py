@@ -3,14 +3,12 @@ import discord
 
 from .errors import NoneFormname
 
-           
 def embed_factory(form_name, *arg, **kwargs):
     try:
         return getattr(sys.modules[__name__], form_name)(*arg, **kwargs)
     except AttributeError:
         raise NoneFormname(form_name)
 
-    
 #아래의 form들은 모두 이 클래스를 상속할 것
 class formbase:
     def __init__(self, *arg, **kwarg):
@@ -47,7 +45,8 @@ class coupang_main(formbase):
 class serch_output_simple(formbase):
     def insert(self, name, url, price, image_url, is_rocket, rating,
                rating_count, discount_rate, base_price, **kwarg):
-        def make_rating_to_moon(rating):
+        def make_rating_to_moon(rating: float) -> str:
+            rating = float(rating)
             full_moon = int(rating)
             half_moon = rating % 1
             return "🌕" * full_moon + ("🌗" if half_moon == 0.5 else "")
@@ -55,21 +54,20 @@ class serch_output_simple(formbase):
         if rating == "":
             rating_info = ""
         else:
-            rating_moon = make_rating_to_moon(float(rating))
+            rating_moon = make_rating_to_moon(rating)
             rating_info = f" {rating_moon} {rating_count}"
             
+        price_text: str = "**%s원**" % price
         if discount_rate == "":
-            discount_info = "."
+            self.embed.description = price_text
         else:
-            discount_info = f"{discount_rate} ~~{base_price}원~~"
+            self.embed.description = price_text + f"\n{discount_rate} ~~{base_price}원~~"
         
         self.embed.title = name
         self.embed.url = url
         author = ("🚀" if is_rocket else "") + rating_info
         self.embed.set_author(name = author)
-        self.embed.add_field(name="%s원" % price, value=discount_info)
         self.embed.set_thumbnail(url=image_url)
-    
 
 class serch_waiting(formbase):
     def init_make(self):
