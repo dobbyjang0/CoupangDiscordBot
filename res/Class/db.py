@@ -34,16 +34,18 @@ class Table:
         self.connection = Connection()
         #self.name 필요하려나?
 
+# 
+
+# 알람 테이블
 class AlarmTable:
     #테이블을 만든다, 자세한 내용은 알람 조건 설정 정한 후 생각해봐야 될듯
     def create_table(self):
         sql = sql_text("""
                        CREATE TABLE price_alarm (
-                           `index` int unsigned PRIMARY KEY AUTO_INCREMENT,
                            `guild_id` bigint unsigned,
                            `channel_id` bigint unsigned,
                            `author_id` bigint unsigned,
-                           `product_code` int unsigned,
+                           `product_id` int unsigned,
                            `product_value` int unsigned
                            );
                        """)
@@ -66,13 +68,13 @@ class AlarmTable:
         return df
     
     #저장한다.
-    def insert(self, guild_id, channel_id, author_id, product_code, product_value):
+    def insert(self, guild_id, channel_id, author_id, product_id, product_value):
         sql = sql_text("""
                        INSERT INTO `price_alarm`
-                       VALUES (:guild_id, :channel_id, :author_id, :product_code, :product_value)
+                       VALUES (:guild_id, :channel_id, :author_id, :product_id, :product_value)
                        """)
     
-        self.connection.execute(sql, guild_id=guild_id, channel_id=channel_id, author_id=author_id, product_code=product_code, product_value=product_value)
+        self.connection.execute(sql, guild_id=guild_id, channel_id=channel_id, author_id=author_id, product_id=product_id, product_value=product_value)
     
     
 
