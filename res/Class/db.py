@@ -167,7 +167,7 @@ class PriceAlarmTable(Table):
                            `guild_id` bigint unsigned,
                            `channel_id` bigint unsigned,
                            `author_id` bigint unsigned,
-                           `product_id` int unsigned,
+                           `product_id` int unsigned FOREIGN KEY REFERENCES `products`,
                            `product_price` int unsigned
                            );
                        """)
