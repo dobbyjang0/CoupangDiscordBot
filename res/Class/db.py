@@ -58,7 +58,7 @@ class ScanTable(Table):
         
         self.connection.execute(sql, product_id=product_id, latest_price=latest_price)
     
-    # id를 넣으면 가격을 확인한다. 알림 신청할 떄 값 있는지 확인용? (없으면 None값이 나온다.)
+    # id를 넣으면 가격을 확인한다. 알림 신청할 때 값 있는지 확인용? (없으면 None값이 나온다.)
     def read_by_id(self, product_id):
         sql = sql_text("""
                        SELECT latest_price

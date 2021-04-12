@@ -8,6 +8,7 @@ import requests
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 
+from res.Class import db
 from res.Class import parser
 from res.Class.embed_form import embed_factory as embed_maker
 
@@ -134,3 +135,67 @@ if __name__ == "__main__":
             print('loaded %s' % extension)
 
     bot.run(os.getenv('DISCORD_TOKEN'))
+
+
+###############################
+## 임시 커맨드, cog로 바꿀 것 ##
+###############################
+
+# 알람 대상에 등록시킨다.
+@bot.command(name="등록")
+async def add_alarm(ctx, product_id, product_price=None):
+    # 현재 가격 스캔, 나중에 파셔쪽에서 클래스 분리, 함수화 시키기
+    url = "https://www.coupang.com/vp/products/%s" % product_id
+    cou_parser = parser.parser(url)
+    now_price = cou_parser.get_item_detail()['price']
+      
+    if not product_price:
+        product_price = now_price
+      
+    #알람 목록에 추가시킨다.
+    alarm_table = db.PriceAlarmTable()
+    alarm_table.insert(ctx.guild.id, ctx.channel.id, ctx.author.id, product_id, product_price)
+    
+    await ctx.send((product_id, product_price, ctx.author.id, '저장완료'))
+    
+    #스캔 목록에 추가시킨다.
+    scan_table = db.ScanTable()
+    if scan_table.read_by_id(product_id) is None:
+        scan_table.insert(product_id, now_price)
+
+    print("스캔목록 저장완료")
+    
+# 하루마다 목록을 스캔한다. 알림을 보낸다.
+@tasks.loop(hours=24)
+async def alarm_process():
+    scan_table = db.ScanTable()
+    record_table = db.SaleRecordTable()
+    alarm_table = db.PriceAlarmTable()
+    
+    # 스캔 대상 제품 스캔
+    scan_df = scan_table.read_all()
+    for idx in scan_df.index:
+        product_id = scan_df.at[idx, 0]
+        latest_price = scan_df.at[idx, 1]
+        
+        # 현재 가격 스캔, 나중에 파셔쪽에서 클래스 분리, 함수화 시키기
+        url = "https://www.coupang.com/vp/products/%s" % product_id
+        cou_parser = parser.parser(url)
+        now_price = cou_parser.get_item_detail()['price']
+        
+        if now_price != latest_price:
+            record_table.insert(product_id, now_price)
+            scan_table.update(product_id, now_price)
+    
+    #알람 보낸다.
+    alarm_df = alarm_table.read_today()
+    for idx in alarm_df.index:
+        channel_id = alarm_df[idx, 1]
+        product_id = alarm_df[idx, 3]
+        price = alarm_df[idx, 4]
+        
+        channel = bot.get_channel(channel_id)
+        
+        await channel.send(f"제품코드 {product_id} 가격 {price}로 변동됨")
+    
+    pass
