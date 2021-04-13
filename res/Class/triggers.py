@@ -1,6 +1,9 @@
 from . import db
 
 class alarm:
+    def __init__(self, bot):
+        self.bot = bot
+
     async def proccess(self):
         scan_table = db.ScanTable()
         record_table = db.SaleRecordTable()
@@ -24,10 +27,10 @@ class alarm:
         #알람 보낸다.
         alarm_df = alarm_table.read_today()
         for idx in alarm_df.index:
-            channel_id = alarm_df[idx, 1]
+            channel_id = int(alarm_df[idx, 1])
             product_id = alarm_df[idx, 3]
             price = alarm_df[idx, 4]
             
-            channel = bot.get_channel(channel_id)
-            
-            await channel.send(f"제품코드 {product_id} 가격 {price}로 변동됨")
+            channel = self.bot.get_channel(channel_id)
+            if channel:
+                await channel.send(f"제품코드 {product_id} 가격 {price}로 변동됨")

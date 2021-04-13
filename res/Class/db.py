@@ -194,7 +194,7 @@ class PriceAlarmTable(Table):
                        FROM `price_alarm`
                        WHERE author_id = :author_id
                        """)
-        df = pandas.read_sql_query(sql = sql, con = self.connection, params={"author_id":author_id})
+        df = pandas.read_sql_query(sql=sql, con=self.connection, params={"author_id": author_id})
         
         return df
     
@@ -258,5 +258,4 @@ def main():
     pass
 
 if __name__ == "__main__":
-    main()     
-
+    main()

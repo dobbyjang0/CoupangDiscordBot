@@ -26,7 +26,7 @@ extensions = [
 @bot.event
 async def on_ready():
     sched = AsyncIOScheduler(timezone="Asia/Seoul")
-    sched.add_job(triggers.alarm().process(), 'cron', hour=0)
+    sched.add_job(triggers.alarm(bot).process(), 'cron', hour=0)
     sched.start()
     
     print("--- 연결 성공 ---")
