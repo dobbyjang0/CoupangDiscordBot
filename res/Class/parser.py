@@ -25,7 +25,7 @@ class parser:
     def status_code(self):
         return requests.get(self.url).status_code
 
-    def get_items(self, limit=3, is_except_ads=True):
+    def get_items(self, limit=3, is_except_ads: bool=True):
         #에러 처리
         check.check().is_startswith(self.url, "https://www.coupang.com/np/search?component=&q=")
 
@@ -33,21 +33,22 @@ class parser:
         assert limit >= 0, "limit은 0보다 커야합니다."
         
         items_page = self.bs.find("ul", {"id": "productList"})
+
         if items_page is None:
             return None
-        else:
-            items_group = self.bs.find("ul", {"id": "productList"}).find_all("li")
-        
+
+        items_group = self.bs.find("ul", {"id": "productList"}).find_all("li")
+        _items_group = iter(items_group)
+
         # 파싱해온 그룹에서 count 갯수만큼 뽑음, 광고 제거는 선택
         items_list = []
-        item_count = 0
-        for item in items_group:
-            if ('search-product__ad-badge' not in item.get("class")) or is_except_ads:
-                items_list.append(item)
-                item_count += 1
-            if item_count >= limit:
-                break
-        
+
+        while limit:
+            now_item = next(_items_group)
+            if "search-product__ad-badge" not in now_item.get("class") or is_except_ads:
+                items_list.append(now_item)
+                limit -= 1
+
         # 정보 뽑아 output 사전에 저장한다.
         datas = []
         def text_safety(bs):
@@ -85,10 +86,8 @@ class parser:
         price = price.replace(',', '')
         price = price.replace('원', '')
         price = int(price)
-        
-        data = {'price': price
-            }
-        return data
+
+        return {'price': price}
 
 if __name__ == "__main__":
     parser = parser("https://www.coupang.com/vp/products/286438028")
