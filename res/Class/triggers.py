@@ -1,7 +1,7 @@
 from . import db
 
 class alarm:
-    async def process(self):
+    async def proccess(self):
         scan_table = db.ScanTable()
         record_table = db.SaleRecordTable()
         alarm_table = db.PriceAlarmTable()
