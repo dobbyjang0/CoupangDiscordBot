@@ -8,7 +8,7 @@ class alarms(commands.Cog):
         self.bot = bot
 
     @commands.command(name="등록")
-    async def add_alarm(ctx, product_id, product_price=None):
+    async def add_alarm(self, ctx, product_id, product_price=None):
         # 현재 가격 스캔, 나중에 파셔쪽에서 클래스 분리, 함수화 시키기
         url = "https://www.coupang.com/vp/products/%s" % product_id
         cou_parser = parser.parser(url)
