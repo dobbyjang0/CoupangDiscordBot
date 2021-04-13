@@ -1,4 +1,5 @@
 from . import db
+from . import parser
 
 class alarm:
     def __init__(self, bot):
