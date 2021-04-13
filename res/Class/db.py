@@ -38,7 +38,7 @@ class ScanTable(Table):
     def create_table(self):
         sql = sql_text("""
                        CREATE TABLE `scan_product` (
-                           `product_id` int unsigned PRIMARY KEY,
+                           `product_id` bigint unsigned PRIMARY KEY,
                            `latest_price` int unsigned
                            );
                        """)
@@ -108,7 +108,7 @@ class SaleRecordTable(Table):
         sql = sql_text("""
                        CREATE TABLE `sale_record`(
                            `time` timestamp DEFAULT NOW(),
-                           `product_id` int unsigned FOREIGN KEY REFERENCES `products`,
+                           `product_id` bigint unsigned,
                            `price` int unsigned
                            );
                        """)
@@ -167,7 +167,7 @@ class PriceAlarmTable(Table):
                            `guild_id` bigint unsigned,
                            `channel_id` bigint unsigned,
                            `author_id` bigint unsigned,
-                           `product_id` int unsigned FOREIGN KEY REFERENCES `products`,
+                           `product_id` bigint unsigned,
                            `product_price` int unsigned
                            );
                        """)
@@ -179,13 +179,13 @@ class PriceAlarmTable(Table):
             print(error_message)
 
     #저장한다. 알람신청할 때 꼭 실행시켜주자
-    def insert(self, guild_id, channel_id, author_id, product_id, product_value):
+    def insert(self, guild_id, channel_id, author_id, product_id, product_price):
         sql = sql_text("""
                        INSERT INTO `price_alarm`
                        VALUES (:guild_id, :channel_id, :author_id, :product_id, :product_price)
                        """)
     
-        self.connection.execute(sql, guild_id=guild_id, channel_id=channel_id, author_id=author_id, product_id=product_id, product_value=product_value)
+        self.connection.execute(sql, guild_id=guild_id, channel_id=channel_id, author_id=author_id, product_id=product_id, product_price=product_price)
     
     # 신청한 사람에 따라서 불러온다.
     def read_by_user(self, author_id):
@@ -227,14 +227,14 @@ class PriceAlarmTable(Table):
         return df
     
     #기준 가격을 업데이트?
-    def update(self, guild_id, channel_id, author_id, product_id, product_value):
+    def update(self, guild_id, channel_id, author_id, product_id, product_price):
         sql = sql_text("""
                        UPDATE `price_alarm`
-                       SET product_value = :product_value
+                       SET product_price = :product_price
                        WHERE guild_id=:guild_id, channel_id=:channel_id, author_id=:author_id, product_id=:product_id
                        """)
     
-        self.connection.execute(sql, guild_id=guild_id, channel_id=channel_id, author_id=author_id, product_id=product_id, product_value=product_value)
+        self.connection.execute(sql, guild_id=guild_id, channel_id=channel_id, author_id=author_id, product_id=product_id, product_price=product_price)
     
     #삭제한다. 조건은 좀 생각해봐야 될 듯
     def delete_by_id(self, author_id, product_id):
@@ -255,6 +255,9 @@ class PriceAlarmTable(Table):
     
 #main 함수
 def main():
+    ScanTable().create_table()
+    SaleRecordTable().create_table()
+    PriceAlarmTable().create_table()
     pass
 
 if __name__ == "__main__":
