@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 
+from ..Class import db
 from ..Class import parser
 from ..Class import db
 
