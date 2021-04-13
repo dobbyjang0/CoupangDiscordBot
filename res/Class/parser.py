@@ -1,6 +1,8 @@
 import bs4
 import requests
 
+from . import check
+
 class parser:
     def __init__(self, url):
         self.url = url
@@ -25,8 +27,7 @@ class parser:
 
     def get_items(self, limit=3, is_except_ads=True):
         #에러 처리
-        if not self.url.startswith("https://www.coupang.com/np/search?component=&q="):
-            raise TypeError
+        check.check().is_startswith(self.url, "https://www.coupang.com/np/search?component=&q=")
 
         assert isinstance(limit, int), "limit은 정수여야합니다."
         assert limit >= 0, "limit은 0보다 커야합니다."
@@ -76,13 +77,13 @@ class parser:
     
     def get_item_detail(self):
         #에러 처리
-        if not self.url.startswith("https://www.coupang.com/vp/products/"):
-            raise TypeError
+        check.check().is_startswith(self.url, "https://www.coupang.com/vp/products/")
+
         item = self.bs.find("div", {"class": "prod-atf"})
         
         price = item.find("span", {"class": "total-price"}).get_text(strip=True)
-        price = price.replace(',','')
-        price = price.replace('원','')
+        price = price.replace(',', '')
+        price = price.replace('원', '')
         price = int(price)
         
         data = {'price': price

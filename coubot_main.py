@@ -5,13 +5,16 @@ import pandas
 import os
 import bs4
 import requests
+
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
+from tendo import singleton
 
 from res.Class import parser
 from res.Class.embed_form import embed_factory as embed_maker
 
 nest_asyncio.apply()
+me = singleton.SingleInstance()
 
 bot = commands.Bot(command_prefix="!")
 load_dotenv("token.env")
