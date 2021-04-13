@@ -5,7 +5,7 @@ class alarm:
     def __init__(self, bot):
         self.bot = bot
 
-    async def proccess(self):
+    async def process(self):
         scan_table = db.ScanTable()
         record_table = db.SaleRecordTable()
         alarm_table = db.PriceAlarmTable()
