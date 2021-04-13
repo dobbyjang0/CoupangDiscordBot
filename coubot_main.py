@@ -5,10 +5,12 @@ import pandas
 import os
 import bs4
 import requests
+
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from res.Class import db
+from res.Class import triggers
 from res.Class import parser
 from res.Class.embed_form import embed_factory as embed_maker
 
@@ -23,6 +25,10 @@ extensions = [
 
 @bot.event
 async def on_ready():
+    sched = AsyncIOScheduler(timezone="Asia/Seoul")
+    sched.add_job(triggers.alarm().process(), 'cron', hour=0)
+    sched.start()
+    
     print("--- 연결 성공 ---")
     print(f"봇 이름: {bot.user}")
     print(f"ID: {bot.user.id}")
@@ -128,7 +134,6 @@ if __name__ == "__main__":
     for extension in extensions:
         try:
             bot.load_extension(extension)
-            print('loaded %s' % extension)
         except Exception as error:
             print('fail to load %s: %s' % (extension, error))
         else:
@@ -164,38 +169,4 @@ async def add_alarm(ctx, product_id, product_price=None):
         scan_table.insert(product_id, now_price)
 
     print("스캔목록 저장완료")
-    
-# 하루마다 목록을 스캔한다. 알림을 보낸다.
-@tasks.loop(hours=24)
-async def alarm_process():
-    scan_table = db.ScanTable()
-    record_table = db.SaleRecordTable()
-    alarm_table = db.PriceAlarmTable()
-    
-    # 스캔 대상 제품 스캔
-    scan_df = scan_table.read_all()
-    for idx in scan_df.index:
-        product_id = scan_df.at[idx, 0]
-        latest_price = scan_df.at[idx, 1]
-        
-        # 현재 가격 스캔, 나중에 파셔쪽에서 클래스 분리, 함수화 시키기
-        url = "https://www.coupang.com/vp/products/%s" % product_id
-        cou_parser = parser.parser(url)
-        now_price = cou_parser.get_item_detail()['price']
-        
-        if now_price != latest_price:
-            record_table.insert(product_id, now_price)
-            scan_table.update(product_id, now_price)
-    
-    #알람 보낸다.
-    alarm_df = alarm_table.read_today()
-    for idx in alarm_df.index:
-        channel_id = alarm_df[idx, 1]
-        product_id = alarm_df[idx, 3]
-        price = alarm_df[idx, 4]
-        
-        channel = bot.get_channel(channel_id)
-        
-        await channel.send(f"제품코드 {product_id} 가격 {price}로 변동됨")
-    
-    pass
+  
