@@ -1,7 +1,15 @@
 from . import db
 from . import parser
 
-class alarm:
+class MetaSingleton(type):
+    _instances = {}
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(MetaSingleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class AlarmTrigger(metaclass = MetaSingleton):
     def __init__(self, bot):
         self.bot = bot
 
@@ -35,3 +43,15 @@ class alarm:
             channel = self.bot.get_channel(channel_id)
             if channel:
                 await channel.send(f"제품코드 {product_id} 가격 {price}로 변동됨")
+        
+    async def test_process(self):
+        alarm_table = db.PriceAlarmTable()
+        alarm_df = alarm_table.read_all()
+        for idx in alarm_df.index:
+            channel_id = int(alarm_df.iat[idx, 1])
+            product_id = alarm_df.iat[idx, 3]
+            price = alarm_df.iat[idx, 4]
+            
+            channel = self.bot.get_channel(channel_id)
+            if channel:
+                await channel.send(f"제품코드 {product_id}")

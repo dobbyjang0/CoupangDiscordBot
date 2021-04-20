@@ -54,7 +54,9 @@ class ScanTable(Table):
         sql = sql_text("""
                        INSERT INTO `scan_product`
                        VALUES (:product_id, :latest_price)
+                       ON DUPLICATE KEY UPDATE latest_price=latest_price
                        """)
+                       #IGNORE 써도 된다 함
         
         self.connection.execute(sql, product_id=product_id, latest_price=latest_price)
     
@@ -187,6 +189,17 @@ class PriceAlarmTable(Table):
     
         self.connection.execute(sql, guild_id=guild_id, channel_id=channel_id, author_id=author_id, product_id=product_id, product_price=product_price)
     
+    #가격을 업데이트한다. 사용자가 알람 가격을 바꾸고 싶을 때 실행시키자.
+    def update_price(self, channel_id, author_id, product_id, product_price):
+        sql = sql_text("""
+                       UPDATE `price_alarm`
+                       SET product_price = :product_price
+                       WHERE channel_id=:channel_id and author_id = :author_id and product_id = :product_id;
+                       """)
+    
+        self.connection.execute(sql, channel_id=channel_id, author_id=author_id, product_id=product_id, product_price=product_price)
+        
+        
     # 신청한 사람에 따라서 불러온다.
     def read_by_user(self, author_id):
         sql = sql_text("""
@@ -226,21 +239,11 @@ class PriceAlarmTable(Table):
 
         return df
     
-    #기준 가격을 업데이트?
-    def update(self, guild_id, channel_id, author_id, product_id, product_price):
-        sql = sql_text("""
-                       UPDATE `price_alarm`
-                       SET product_price = :product_price
-                       WHERE guild_id=:guild_id, channel_id=:channel_id, author_id=:author_id, product_id=:product_id
-                       """)
-    
-        self.connection.execute(sql, guild_id=guild_id, channel_id=channel_id, author_id=author_id, product_id=product_id, product_price=product_price)
-    
     #삭제한다. 조건은 좀 생각해봐야 될 듯
     def delete_by_id(self, author_id, product_id):
         sql = sql_text("""
                        DELETE FROM `price_alarm`
-                       WHERE author_id=:author_id, product_id=:product_id
+                       WHERE author_id=:author_id and product_id=:product_id
                        """)
     
         self.connection.execute(sql, author_id=author_id, product_id=product_id)
@@ -248,7 +251,7 @@ class PriceAlarmTable(Table):
     def delete_by_channel(self, channel_id, author_id):
         sql = sql_text("""
                        DELETE FROM `price_alarm`
-                       WHERE channel_id=:channel_id, author_id=:author_id
+                       WHERE channel_id=:channel_id and author_id=:author_id
                        """)
     
         self.connection.execute(sql, channel_id=channel_id, author_id=author_id)

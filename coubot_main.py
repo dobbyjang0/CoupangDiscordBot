@@ -26,7 +26,7 @@ extensions = [
 @bot.event
 async def on_ready():
     sched = AsyncIOScheduler(timezone="Asia/Seoul")
-    sched.add_job(triggers.alarm(bot).process, 'cron', hour=0)
+    sched.add_job(triggers.AlarmTrigger(bot).test_process, 'interval', seconds=30)
     sched.start()
     
     print("--- 연결 성공 ---")
@@ -85,6 +85,27 @@ async def Gcoupang_search(ctx, count=3):
             for emoji in emojis:
                 await msg.add_reaction(emoji)
         reaction, user = await bot.wait_for("reaction_add", check=lambda r, u: r.emoji in emojis and r.me is True)
+
+@bot.command()
+async def 등록(ctx, product_id=None, product_price=None):
+    alarms = bot.get_cog('AlarmCog')
+    print(product_id, product_price)
+    await alarms.add_alarm(ctx, product_id, product_price)
+
+@bot.command()    
+async def 목록(ctx):
+    alarms = bot.get_cog('AlarmCog')
+    await alarms.read_alarm_list(ctx)
+
+@bot.command()    
+async def 삭제(ctx, product_id=None):
+    alarms = bot.get_cog('AlarmCog')
+    await alarms.delete_alarm(ctx, product_id)   
+
+@bot.command()    
+async def 가격수정(ctx, product_id=None, product_price=None):
+    alarms = bot.get_cog('AlarmCog')
+    await alarms.update_alarm(ctx, product_id, product_price)   
 
 # 킬 관련 커맨드
 async def get_appinfo():
