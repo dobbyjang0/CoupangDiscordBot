@@ -18,9 +18,11 @@ class AlarmCog(commands.Cog):
         url = f"https://www.coupang.com/vp/products/{product_id}"
         print(url)
         cou_parser = parser.parser(url)
+
         if not cou_parser.get_item_detail():
             await ctx.send('없는 제품')
             return
+
         print(cou_parser.get_item_detail())
         
         now_price = cou_parser.get_item_detail()['price']

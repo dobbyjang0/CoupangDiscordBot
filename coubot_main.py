@@ -107,16 +107,64 @@ async def 가격수정(ctx, product_id=None, product_price=None):
     alarms = bot.get_cog('AlarmCog')
     await alarms.update_alarm(ctx, product_id, product_price)   
 
-# 킬 관련 커맨드
-async def get_appinfo():
+# --- Team Only Commands --- #
+
+async def get_appinfo(): # 팀들을 User로 얻기
     return await bot.application_info()
 
-def is_teamembers():
+def is_teamembers(): # 팀 멤버 확인 Decorator
     def predicate(ctx):
         app_info = asyncio.run(get_appinfo())
         team = app_info.team
         return ctx.author in team.members
     return commands.check(predicate)
+
+@bot.group()
+@is_teamembers()
+async def cogs(ctx):
+    pass
+
+@cogs.command()
+async def load(ctx, name, package=None):
+    try:
+        bot.load_extension(name, package)
+    except commands.ExtensionNotFound:
+        embed = embed_maker("extension_NotFound")
+        await ctx.send(embed=embed)
+    except commands.ExtensionAlreadyLoaded:
+        embed = discord.Embed(description="이미 불러와져있습니다.")
+        await ctx.send(embed=embed)
+    else:
+        embed = discord.Embed(description="로드 성공")
+        await ctx.send(embed=embed)
+
+@cogs.command()
+async def unload(ctx, name, package=None):
+    try:
+        bot.unload_extension(name, package)
+    except commands.ExtensionNotFound:
+        embed = embed_maker("extension_NotFound")
+        await ctx.send(embed=embed)
+    except commands.ExtensionNotLoaded:
+        embed = embed_maker("extension_NotLoaded")
+        await ctx.send(embed=embed)
+    else:
+        embed = discord.Embed(description="언로드 성공")
+        await ctx.send(embed=embed)
+
+@cogs.command()
+async def reload(ctx, name, package=None):
+    try:
+        bot.reload_extension(name, package)
+    except commands.ExtensionNotFound:
+        embed = embed_maker("extension_NotFound")
+        await ctx.send(embed=embed)
+    except commands.ExtensionNotLoaded:
+        embed = embed_maker("extension_NotLoaded")
+        await ctx.send(embed=embed)
+    else:
+        embed = discord.Embed(description="리로드 성공")
+        await ctx.send(embed=embed)
 
 @bot.command(name="킬")
 @is_teamembers()

@@ -180,7 +180,7 @@ class PriceAlarmTable(Table):
             error_message = "Already exist"
             print(error_message)
 
-    #저장한다. 알람신청할 때 꼭 실행시켜주자
+    # 저장한다. 알람신청할 때 꼭 실행시켜주자
     def insert(self, guild_id, channel_id, author_id, product_id, product_price):
         sql = sql_text("""
                        INSERT INTO `price_alarm`
@@ -189,8 +189,8 @@ class PriceAlarmTable(Table):
     
         self.connection.execute(sql, guild_id=guild_id, channel_id=channel_id, author_id=author_id, product_id=product_id, product_price=product_price)
     
-    #가격을 업데이트한다. 사용자가 알람 가격을 바꾸고 싶을 때 실행시키자.
-    def update_price(self, channel_id, author_id, product_id, product_price):
+    # 가격을 업데이트한다. 사용자가 알람 가격을 바꾸고 싶을 때 실행시키자.
+    def update_price(self, channel_id, author_id, product_id: int, product_price: int):
         sql = sql_text("""
                        UPDATE `price_alarm`
                        SET product_price = :product_price
@@ -211,7 +211,7 @@ class PriceAlarmTable(Table):
         
         return df
     
-    #오늘 변경된 (알림 보내야할) 목록을 뽑아온다.
+    # 오늘 변경된 (알림 보내야할) 목록을 뽑아온다.
     def read_today(self):
         sql = sql_text("""
                        SELECT pa.guild_id, pa.channel_id, pa.author_id, pa.product_id, sr.price
@@ -228,7 +228,7 @@ class PriceAlarmTable(Table):
 
         return df
     
-    #전체 테이블을 불러온다. (잘 안 쓰일듯)
+    # 전체 테이블을 불러온다. (잘 안 쓰일듯)
     def read_all(self):
         #실행
         sql = sql_text("""
@@ -239,7 +239,7 @@ class PriceAlarmTable(Table):
 
         return df
     
-    #삭제한다. 조건은 좀 생각해봐야 될 듯
+    # 삭제한다. 조건은 좀 생각해봐야 될 듯
     def delete_by_id(self, author_id, product_id):
         sql = sql_text("""
                        DELETE FROM `price_alarm`

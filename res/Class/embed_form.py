@@ -93,6 +93,14 @@ class kill_count(formbase):
 class kill_canceled(formbase):
     def init_make(self):
         self.embed.title = "종료를 취소합니다."
-        
+       
+class extension_NotFound(formbase):
+    def init_make(self):
+        self.embed.description = "확장자를 찾을 수 없습니다."
+
+class extension_NotLoaded(formbase):
+    def init_make(self):
+        self.embed.description = "로드되지 않은 확장자입니다."
+
 if __name__ == "__main__":
     print(embed_factory("kill_count", 5).embed.title)
