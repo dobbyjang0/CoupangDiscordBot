@@ -40,7 +40,9 @@ async def on_ready():
 # 쿠팡 관련 커맨드
 @bot.group(name="쿠팡")
 async def coupang(ctx):
-    pass
+    if ctx.subcommand_passed is None:
+        embed = discord.Embed() # 나중에 설명 추가
+        await ctx.send(embed=embed)
 
 @coupang.command(name="메인", aliases=["기본", "홈"])
 async def Gcoupang_main(ctx):
