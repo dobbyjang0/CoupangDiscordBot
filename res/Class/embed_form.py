@@ -31,11 +31,11 @@ class formbase:
 class coupang_main(formbase):
     def init_make(self):
         descriptions = {
-        "골드박스": "https://coupa.ng/bSQUxy",
-        "로켓프레쉬": "https://coupa.ng/bSQUDh",
-        "로켓와우": "https://coupa.ng/bSQUFP",
-        "로켓직구": "https://coupa.ng/bSQUJ4",
-        "로켓배송": "https://coupa.ng/bSQUMW"
+            "골드박스": "https://coupa.ng/bSQUxy",
+            "로켓프레쉬": "https://coupa.ng/bSQUDh",
+            "로켓와우": "https://coupa.ng/bSQUFP",
+            "로켓직구": "https://coupa.ng/bSQUJ4",
+            "로켓배송": "https://coupa.ng/bSQUMW"
         }
         self.embed.title = "쿠팡"
         self.embed.description = "\n".join("▶ [**%s**](<%s>)" % (k, v) for k, v in descriptions.items())
