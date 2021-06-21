@@ -1,106 +1,184 @@
-import sqlalchemy
-from sqlalchemy import create_engine
-from sqlalchemy import text as sql_text
-import pymysql
-import pandas
+import aiomysql
+import functools
 
-#싱글톤 커낵션
-class Connection():
-    def __new__(cls):
-        if not hasattr(cls, 'cursor'):
+from res.Class import errors
 
-            def conn(user, password, host, port, db, charset):
-                db_connection_str = f'mysql+pymysql://{user}:{password}@{host}:{port}/{db}'
-                engine = create_engine(db_connection_str, encoding = charset, echo = True)
+from typing import Union
 
-                return engine
 
-            def quick_admin_login():
-                context = pandas.read_csv('admin_login_info.csv', header=None, index_col=0, squeeze=True).to_dict()
-                connection = conn(**context)
-                print(connection)
+def connection_handler():
 
-                return connection
+    def wrapper(func):
 
-            cls.cursor = quick_admin_login()
+        @functools.wraps(func)
+        async def wrapped(*args, **kwargs):
+            instance = args[0]
 
-        return cls.cursor
+            if hasattr(instance, "session") is False:
+                raise errors.InstanceHasNotSession("인스턴스에 session attr이 없습니다.")
 
-#부모 테이블 클래스, 여기다가 각 테이블마다 추가되는거 상속해서 추가하기
-class Table:
+            async with instance.session.connection as session:
+                async with session.cursor() as cursor:
+                    session: aiomysql.connection.Connection = session
+                    cursor: aiomysql.cursors.Cursor = cursor
+
+                    return await func(instance, session, cursor, *args[1:], **kwargs)
+
+        return wrapped
+
+    return wrapper
+
+
+class DatabaseSession:
+
+    def __init__(
+            self,
+            host: str,
+            user: str,
+            port: int,
+            database: str = None,
+            db: str = None,
+            password: str = None,
+            passwd: str = None
+    ):
+
+        self._database = database or db
+        self._host = host
+        self._user = user
+        self._password = password or passwd
+        self._port = port
+
+    @property
+    def database(self):
+        return self._database
+
+    @database.setter
+    def database(self, value):
+        self._database = value
+
+    @property
+    def host(self):
+        return self._host
+
+    @host.setter
+    def host(self, value):
+        self._host = value
+
+    @property
+    def user(self):
+        return self._user
+
+    @property
+    def password(self):
+        return self._password
+
+    @password.setter
+    def password(self, value):
+        self._password = value
+
+    passwd = password
+
+    @property
+    def port(self):
+        return self._port
+
+    @port.setter
+    def port(self, value):
+        self._port = value
+
+    @property
+    def connection(self):
+        return aiomysql.connect(
+            host=self.host, port=self.port, user=self.user, password=self.password, db=self.database
+        )
+
+
+class Database:
+
+    def __init__(
+            self,
+            database: str = None,
+            db: str = None,
+            host: str = "localhost",
+            user: str = "root",
+            password: str = "password",
+            passwd: str = None,
+            port: int = 3306
+    ):
+
+        if not database and not db:
+            raise Exception("database 또는 db가 충족되어야합니다.")
+
+        self.session = DatabaseSession(
+            database=database or db,
+            host=host,
+            user=user,
+            password=passwd or password,
+            port=port
+        )
+
+
+class ScanTable(Database):
+
     def __init__(self):
-        self.connection = Connection()
-        #self.name 필요하려나?
+        super().__init__("")
 
-# 스캔할 제품 테이블
-# create_table, insert, read_by_id, read_all, update, delete
-class ScanTable(Table):
-    def create_table(self):
-        sql = sql_text("""
-                       CREATE TABLE `scan_product` (
-                           `product_id` bigint unsigned PRIMARY KEY,
-                           `latest_price` int unsigned
-                           );
-                       """)
+    @connection_handler()
+    async def create_table(self, session, cursor):
+        sql = """
+        CREATE TABLE `scan_product` (
+            `product_id` bigint unsigned PRIMARY KEY,
+            `latest_price` int unsigned
+        )
+        """
 
-        try:
-            self.connection.execute(sql)
-        except:
-            error_message = "Already exist"
-            print(error_message)
-            
-    #값을 넣는다. 초기에 알림 신청할 때 없다면 넣어주자
-    def insert(self, product_id, latest_price):
-        sql = sql_text("""
-                       INSERT INTO `scan_product`
-                       VALUES (:product_id, :latest_price)
-                       ON DUPLICATE KEY UPDATE latest_price=latest_price
-                       """)
-                       #IGNORE 써도 된다 함
-        
-        self.connection.execute(sql, product_id=product_id, latest_price=latest_price)
+        await cursor.execute(sql)
+        await session.commit()
+
+    @connection_handler()
+    async def insert(self, session, cursor, product_id, latest_price):
+        sql = """
+        INSERT INTO `scan_product` (product_id, latest_price)
+        VALUES (%(product_id)s, %(latest_price)s) 
+        ON DUPLICATE KEY UPDATE latest_price=%(latest_price)s
+        """
+
+        await cursor.execute(sql, {"product_id": product_id, "latest_price": latest_price})
+        await session.commit()
+
+    @connection_handler()
+    async def read_by_id(self, session, cursor, product_id) -> Union[None, tuple]:
+        sql = """
+        SELECT latest_price FROM `scan_product`
+        WHERE product_id = %s
+        """
     
-    # id를 넣으면 가격을 확인한다. 알림 신청할 때 값 있는지 확인용? (없으면 None값이 나온다.)
-    def read_by_id(self, product_id):
-        sql = sql_text("""
-                       SELECT latest_price
-                       FROM `scan_product`
-                       WHERE product_id = :product_id
-                       """)
+        await cursor.execute(sql, product_id)
+        return await cursor.fetchone()
+
+    @connection_handler()
+    async def read_all(self, session, cursor):
+        sql = "SELECT * FROM `scan_product`"
+
+        await cursor.execute(sql)
+        return await cursor.fetchall()
     
-        result = self.connection.execute(sql, product_id=product_id).fetchone()
-        
-        return result
-    
-    # 모든 값을 불러온다. 가격 업데이트된거 있나 스캔할 때 이걸로 반복문 돌릴 것
-    def read_all(self):
-        sql = sql_text("""
-                       SELECT *
-                       FROM `scan_product`
-                       """)
-    
-        df = pandas.read_sql_query(sql = sql, con = self.connection)
-        
-        return df
-    
-    # id를 입력하면 값을 수정할 수 있다. 가격 변동이 일어났으면 시계열 데이터 추가와 함께 할 것
-    def update(self, product_id, latest_price):
-        sql = sql_text("""
-                       UPDATE `scan_product`
-                       SET latest_price = :latest_price
-                       WHERE product_id = :product_id;
-                       """)
-    
-        self.connection.execute(sql, product_id=product_id, latest_price=latest_price)
-    
-    # 스캔 제품에서 제외시킨다.
-    def delete(self, product_id):
-        sql = sql_text("""
-                       DELETE FROM `scan_product`
-                       where product_id = :product_id
-                       """)
-    
-        self.connection.execute(sql, product_id=product_id)
+    @connection_handler()
+    async def update(self, session, cursor, product_id, latest_price):
+        sql = """
+        UPDATE `scan_product`
+        SET latest_price = %s
+        WHERE product_id = %s
+        """
+
+        await cursor.execute(sql, (latest_price, product_id))
+        await session.commit()
+
+    @connection_handler()
+    async def delete(self, session, cursor, product_id):
+        sql = "DELETE FROM `scan_product` where product_id = %s"
+        await cursor.execute(sql, product_id)
+        await session.commit()
     
 # 시계열 가격 데이터 테이블
 # create_table, inset, read_all, read_by_id
