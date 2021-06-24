@@ -248,107 +248,147 @@ class SaleRecordTable(Database):
 
 # 알람 테이블
 # create_table insert read_by_user read_today read_by_user read_all update delete_by_id delete_by_channel
-class PriceAlarmTable(Table):
-    #테이블을 만든다. 길드 아이디는 저장할필요 없을 듯?
-    def create_table(self):
-        sql = sql_text("""
-                       CREATE TABLE price_alarm (
-                           `guild_id` bigint unsigned,
-                           `channel_id` bigint unsigned,
-                           `author_id` bigint unsigned,
-                           `product_id` bigint unsigned,
-                           `product_price` int unsigned
-                           );
-                       """)
+class PriceAlarmTable(Database):
+    # 테이블을 만든다. 길드 아이디는 저장할필요 없을 듯?
+    @connection_handler()
+    async def create_table(self, session, cursor):
+        sql = """
+        CREATE TABLE price_alarm (
+            `guild_id` bigint unsigned,
+            `channel_id` bigint unsigned,
+            `author_id` bigint unsigned,
+            `product_id` bigint unsigned,
+            `product_price` int unsigned
+        )
+        """
+
+        await cursor.execute(sql)
 
         try:
-            self.connection.execute(sql)
-        except:
-            error_message = "Already exist"
-            print(error_message)
+            await session.commit()
+
+        except pymysql.err.InternalError as error:
+            return error
 
     # 저장한다. 알람신청할 때 꼭 실행시켜주자
-    def insert(self, guild_id, channel_id, author_id, product_id, product_price):
-        sql = sql_text("""
-                       INSERT INTO `price_alarm`
-                       VALUES (:guild_id, :channel_id, :author_id, :product_id, :product_price)
-                       """)
-    
-        self.connection.execute(sql, guild_id=guild_id, channel_id=channel_id, author_id=author_id, product_id=product_id, product_price=product_price)
+    @connection_handler()
+    async def insert(
+            self,
+            session,
+            cursor,
+            guild_id,
+            channel_id,
+            author_id,
+            product_id,
+            product_price
+    ):
+
+        sql = """
+        INSERT INTO `price_alarm` (guild_id, channel_id, author_id, product_id, product_price)
+        VALUES (%s, %s, %s, %s, %s)
+        """
+
+        await cursor.execute(sql, (guild_id, channel_id, author_id, product_id, product_price))
+        await session.commit()
     
     # 가격을 업데이트한다. 사용자가 알람 가격을 바꾸고 싶을 때 실행시키자.
-    def update_price(self, channel_id, author_id, product_id: int, product_price: int):
-        sql = sql_text("""
-                       UPDATE `price_alarm`
-                       SET product_price = :product_price
-                       WHERE channel_id=:channel_id and author_id = :author_id and product_id = :product_id;
-                       """)
-    
-        self.connection.execute(sql, channel_id=channel_id, author_id=author_id, product_id=product_id, product_price=product_price)
-        
-        
+    @connection_handler()
+    async def update_price(
+            self,
+            session,
+            cursor,
+            channel_id,
+            author_id,
+            product_id: int,
+            product_price: int
+    ):
+
+        sql = """
+        UPDATE `price_alarm` SET product_price = %(product_price)s
+        WHERE channel_id=%(channel_id)s and author_id = %(author_id)s and product_id = %(product_id)s
+        """
+
+        await cursor.execute(sql, {
+            "product_price": product_price,
+            "channel_id": channel_id,
+            "author_id": author_id,
+            "product_id": product_id
+        })
+        await session.commit()
+
     # 신청한 사람에 따라서 불러온다.
-    def read_by_user(self, author_id):
-        sql = sql_text("""
-                       SELECT guild_id, channel_id, product_id, product_price
-                       FROM `price_alarm`
-                       WHERE author_id = :author_id
-                       """)
-        df = pandas.read_sql_query(sql=sql, con=self.connection, params={"author_id": author_id})
-        
-        return df
+    @connection_handler()
+    async def read_by_user(self, session, cursor, author_id):
+        sql = """
+        SELECT guild_id, channel_id, product_id, product_price FROM `price_alarm`
+        WHERE author_id = %s
+        """
+
+        await cursor.execute(sql, author_id)
+        return await cursor.fetchone()
     
     # 오늘 변경된 (알림 보내야할) 목록을 뽑아온다.
-    def read_today(self):
-        sql = sql_text("""
-                       SELECT pa.guild_id, pa.channel_id, pa.author_id, pa.product_id, sr.price
-                       FROM (
-                           SELECT product_id, price
-                           FROM `sale_record`
-                           WHERE TIMESTAMPDIFF(DAY, time, CURRENT_TIMESTAMP) < 1
-                           ) AS sr
-                       JOIN `price_alarm` AS pa ON pa.product_id = sr.product_id 
-                       WHERE sr.price <= pa.product_price
-                       """)
-                       
-        df = pandas.read_sql_query(sql = sql, con = self.connection)
+    @connection_handler()
+    async def read_today(self, session, cursor):
+        sql = """
+        SELECT pa.guild_id, pa.channel_id, pa.author_id, pa.product_id, sr.price
+        FROM (
+            SELECT product_id, price
+            FROM `sale_record`
+            WHERE TIMESTAMPDIFF(DAY, time, CURRENT_TIMESTAMP) < 1
+        ) AS sr
+        
+        JOIN `price_alarm` AS pa ON pa.product_id = sr.product_id
+        WHERE sr.price <= pa.product_price
+        """
+        await cursor.execute(sql)
+        results = await cursor.fetchall()
 
-        return df
+        if not results:
+            return None
+
+        return results
     
     # 전체 테이블을 불러온다. (잘 안 쓰일듯)
-    def read_all(self):
-        #실행
-        sql = sql_text("""
-                       SELECT *
-                       FROM `price_alarm`
-                       """)
-        df = pandas.read_sql_query(sql = sql, con = self.connection)
+    @connection_handler()
+    async def read_all(self, session, cursor):
+        sql = "SELECT * FROM `price_alarm`"
+        await cursor.execute(sql)
+        results = await cursor.fetchall()
 
-        return df
+        if not results:
+            return None
+
+        return results
     
     # 삭제한다. 조건은 좀 생각해봐야 될 듯
-    def delete_by_id(self, author_id, product_id):
-        sql = sql_text("""
-                       DELETE FROM `price_alarm`
-                       WHERE author_id=:author_id and product_id=:product_id
-                       """)
-    
-        self.connection.execute(sql, author_id=author_id, product_id=product_id)
-        
-    def delete_by_channel(self, channel_id, author_id):
-        sql = sql_text("""
-                       DELETE FROM `price_alarm`
-                       WHERE channel_id=:channel_id and author_id=:author_id
-                       """)
-    
-        self.connection.execute(sql, channel_id=channel_id, author_id=author_id)
-    
-#main 함수
+    @connection_handler()
+    async def delete_by_id(self, session, cursor, author_id, product_id):
+        sql = """
+        DELETE FROM `price_alarm`
+        WHERE author_id=%s and product_id=%s
+        """
+
+        await cursor.execute(sql, (author_id, product_id))
+        return await cursor.fetchone()
+
+    @connection_handler()
+    async def delete_by_channel(self, session, cursor, channel_id, author_id):
+        sql = """
+        DELETE FROM `price_alarm`
+        WHERE channel_id=%s and author_id=%s
+        """
+
+        await cursor.execute(sql, (channel_id, author_id))
+        return await cursor.fetchone()
+
+
+# main 함수
 def main():
     ScanTable().create_table()
     SaleRecordTable().create_table()
     PriceAlarmTable().create_table()
-    pass
+
 
 if __name__ == "__main__":
     main()
