@@ -1,3 +1,4 @@
+import pymysql
 import aiomysql
 import functools
 
@@ -179,66 +180,74 @@ class ScanTable(Database):
         sql = "DELETE FROM `scan_product` where product_id = %s"
         await cursor.execute(sql, product_id)
         await session.commit()
-    
+
+
 # 시계열 가격 데이터 테이블
 # create_table, inset, read_all, read_by_id
-class SaleRecordTable(Table):
+class SaleRecordTable(Database):
+
     # 테이블을 만든다.
-    def create_table(self):
-        sql = sql_text("""
-                       CREATE TABLE `sale_record`(
-                           `time` timestamp DEFAULT NOW(),
-                           `product_id` bigint unsigned,
-                           `price` int unsigned
-                           );
-                       """)
+    @connection_handler()
+    async def create_table(self, session, cursor):
+        sql = """
+        CREATE TABLE `sale_record`(
+            `time` timestamp NOT NULL DEFAULT NOW(),
+            `product_id` bigint unsigned,
+            `price` int unsigned
+        )
+        """
+
+        await cursor.execute(sql)
 
         try:
-            self.connection.execute(sql)
-        except:
-            error_message = "Already exist"
-            print(error_message)
-    
-    #값을 하나 추가한다. 가격 변동이 일어날때 저장할 것
-    def insert(self, product_id, price):
-        sql = sql_text("""
-                       INSERT INTO `sale_record`
-                       VALUES (default, :product_id, :price)
-                       """)
-                     
-        self.connection.execute(sql, product_id=product_id, price=price)  
+            await session.commit()
 
-    #로그 폴더이므로,update나 delete는 만들어두지 않았음.
-    #필요하면 용도에 따라 만듬
-    
-    #모든 값을 읽는다.
-    def read_all(self):
-        sql = sql_text("""
-                       SELECT *
-                       FROM `sale_record`
-                       ORDER BY product_id
-                       """)
+        except pymysql.err.InternalError as error:
+            code, msg = error.args
+
+            if code == 1050:
+                return msg
+
+    @connection_handler()
+    async def insert(self, session, cursor, product_id, price):
+        sql = """
+        INSERT INTO `sale_record`
+        VALUES (default, %s, %s)
+        """
+
+        await cursor.execute(sql, (product_id, price))
+        await session.commit()
+
+    # 로그 폴더이므로,update나 delete는 만들어두지 않았음.
+    # 필요하면 용도에 따라 만듬
+    # 모든 값을 읽는다.
+    @connection_handler()
+    async def read_all(self, session, cursor):
+        sql = "SELECT * FROM `sale_record` ORDER BY product_id"
         
         # 귀찮아서 걍 판다스로 뽑음
-        df = pandas.read_sql_query(sql = sql, con = self.connection)
-        
-        return df
+        await cursor.execute(sql)
+        results = await cursor.fetchall()
+
+        if not results:
+            return None
+
+        return results
     
-    #id를 넣으면 날짜와 가격을 뽑는다.
-    def read_by_id(self, product_id):
-        sql = sql_text("""
-                       SELECT time, price
-                       FROM `sale_record`
-                       WHERE product_id = :product_id
-                       ORDER BY time
-                       """)
-        
-        df = pandas.read_sql_query(sql = sql, con = self.connection, params={"product_id":product_id})
-        
-        return df
+    # product_id를 넣으면 날짜와 가격을 뽑는다.
+    @connection_handler()
+    async def read_by_id(self, session, cursor, product_id):
+        sql = """
+        SELECT time, price FROM `sale_record` 
+        WHERE product_id = :product_id ORDER BY time
+        """
+
+        await cursor.execute(sql, product_id)
+        return await cursor.fetchone()
+
 
 # 알람 테이블
-#create_table insert read_by_user read_today read_by_user read_all update delete_by_id delete_by_channel
+# create_table insert read_by_user read_today read_by_user read_all update delete_by_id delete_by_channel
 class PriceAlarmTable(Table):
     #테이블을 만든다. 길드 아이디는 저장할필요 없을 듯?
     def create_table(self):
