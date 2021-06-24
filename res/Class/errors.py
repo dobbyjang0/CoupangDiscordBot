@@ -1,4 +1,4 @@
-class NoneFormname(Exception):
+class NoneFormName(Exception):
     def __init__(self, form_name, message=None):
         self.form_name = form_name
         self.message = message
