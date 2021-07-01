@@ -21,6 +21,25 @@ class FormBase(discord.Embed):
         return self
 
     @classmethod
+    def coupang_main(cls):
+        self = cls()
+
+        descriptions = {
+            "골드박스": "https://coupa.ng/bSQUxy",
+            "로켓프레쉬": "https://coupa.ng/bSQUDh",
+            "로켓와우": "https://coupa.ng/bSQUFP",
+            "로켓직구": "https://coupa.ng/bSQUJ4",
+            "로켓배송": "https://coupa.ng/bSQUMW"
+        }
+
+        self.title = "쿠팡"
+        self.description = "\n".join("▶ [**%s**](<%s>)" % (k, v) for k, v in descriptions.items())
+        self.url = "https://coupa.ng/bSQJi8"
+        self.set_thumbnail(url="https://cdn.discordapp.com/attachments/804815694717911080/817096183637344286/img.png")
+
+        return self
+
+    @classmethod
     def search_output_simple(
             cls,
             name: str,
@@ -72,22 +91,6 @@ class FormBase(discord.Embed):
         self.set_thumbnail(url=image_url)
 
         return self
-
-
-# 처음에 안바뀌는건 init_make, 처음에 값을 넣어줘야 되는건 insert에서 해줘야함
-class coupang_main(FormBase):
-    def init_make(self):
-        descriptions = {
-            "골드박스": "https://coupa.ng/bSQUxy",
-            "로켓프레쉬": "https://coupa.ng/bSQUDh",
-            "로켓와우": "https://coupa.ng/bSQUFP",
-            "로켓직구": "https://coupa.ng/bSQUJ4",
-            "로켓배송": "https://coupa.ng/bSQUMW"
-        }
-        self.embed.title = "쿠팡"
-        self.embed.description = "\n".join("▶ [**%s**](<%s>)" % (k, v) for k, v in descriptions.items())
-        self.embed.url = "https://coupa.ng/bSQJi8"
-        self.embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/804815694717911080/817096183637344286/img.png")
 
 
 class serch_waiting(FormBase):
