@@ -66,14 +66,13 @@ class FormBase(discord.Embed):
 
             return full_moons
 
-        if rating == "":
-            rating_info = ""
+        rating_info = ""
 
-        else:
+        if rating != "":
             rating_moon = make_rating_to_moon()
-            rating_info = f" {rating_moon} {rating_count}"
+            rating_info = f" {rating_moon} ({rating_count:,})"
 
-        price_text = f"**{price}원**"
+        price_text = f"**{price} 원**"
 
         if discount_rate == "":
             self.description = price_text
