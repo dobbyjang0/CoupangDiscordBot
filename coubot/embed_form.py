@@ -12,9 +12,8 @@ def embed_factory(form_name, *arg, **kwargs):
     raise NoneFormName(form_name)
 
 
-# 아래의 form들은 모두 이 클래스를 상속할 것
-
-class formbase:
+# 아래의 Form들은 모두 이 클래스를 상속할 것
+class FormBase:
     def __init__(self, *arg, **kwarg):
         self.embed = discord.Embed()
         self.init_make()
@@ -32,7 +31,7 @@ class formbase:
         return self.embed
 
 # 처음에 안바뀌는건 init_make, 처음에 값을 넣어줘야 되는건 insert에서 해줘야함
-class coupang_main(formbase):
+class coupang_main(FormBase):
     def init_make(self):
         descriptions = {
             "골드박스": "https://coupa.ng/bSQUxy",
@@ -46,7 +45,7 @@ class coupang_main(formbase):
         self.embed.url = "https://coupa.ng/bSQJi8"
         self.embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/804815694717911080/817096183637344286/img.png")
 
-class serch_output_simple(formbase):
+class serch_output_simple(FormBase):
     def insert(self, name, url, price, image_url, is_rocket, rating,
                rating_count, discount_rate, base_price, **kwarg):
         def make_rating_to_moon(rating: float) -> str:
@@ -73,36 +72,36 @@ class serch_output_simple(formbase):
         self.embed.set_author(name = author)
         self.embed.set_thumbnail(url=image_url)
 
-class serch_waiting(formbase):
+class serch_waiting(FormBase):
     def init_make(self):
         self.embed.title = "상품의 이름 또는 링크를 입력해주세요."
 
     def insert(self, *arg, **kwarg):
         self.embed.set_footer(text="듣고 있어요. 편하게 말씀해주세요!")
 
-class serch_ing(formbase):
+class serch_ing(FormBase):
     def init_make(self):
         self.embed.title = "검색중이에요."
         
-class serch_oops(formbase):
+class serch_oops(FormBase):
     def init_make(self):
         self.embed.title = "이런!"
         self.embed.description = "올바른 쿠팡 상품 링크가 아닌 것 같아요."
         self.embed.color = discord.Colour.red()
         
-class kill_count(formbase):
+class kill_count(FormBase):
     def insert(self, timer, *arg, **kwarg):
         self.embed.title = "봇이 %d 초 후 종료됩니다." % timer
         
-class kill_canceled(formbase):
+class kill_canceled(FormBase):
     def init_make(self):
         self.embed.title = "종료를 취소합니다."
        
-class extension_NotFound(formbase):
+class extension_NotFound(FormBase):
     def init_make(self):
         self.embed.description = "확장자를 찾을 수 없습니다."
 
-class extension_NotLoaded(formbase):
+class extension_NotLoaded(FormBase):
     def init_make(self):
         self.embed.description = "로드되지 않은 확장자입니다."
 
