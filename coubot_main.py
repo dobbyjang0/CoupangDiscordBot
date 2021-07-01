@@ -4,12 +4,15 @@ import asyncio
 import discord
 import nest_asyncio
 
-from discord.ext import commands
-from dotenv import load_dotenv
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from tendo import singleton
+from dotenv import load_dotenv
+from discord.ext import commands
+from discord_slash.model import ButtonStyle
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from discord_slash.utils.manage_components import *
 
-from coubot import triggers, parser
+
+from coubot import triggers
 from coubot.embed_form import embed_factory as embed_maker
 
 nest_asyncio.apply()
@@ -43,9 +46,11 @@ async def coupang(ctx):
         embed = discord.Embed() # 나중에 설명 추가
         await ctx.send(embed=embed)
 
+
 @coupang.command(name="메인", aliases=["기본", "홈"])
 async def Gcoupang_main(ctx):
     await ctx.send(embed=embed_maker("coupang_main").get)
+
 
 @coupang.command(name="검색")
 async def Gcoupang_search(ctx, count=3):
@@ -64,28 +69,52 @@ async def Gcoupang_search(ctx, count=3):
 
     content = wait_m.content
     if content.startswith("https://"):
+
         if content.startswith("https://www.coupang.com/vp/products/"):
             pass
+
         else:
             await msg.edit(embed=embed_maker("serch_oops").get)
+
     else:
         await msg.edit(embed=embed_maker("serch_ing").get)
         
         url = "https://www.coupang.com/np/search?component=&q=%s" % content
-        cou_parser = parser.parser(url)
+        cou_parser = coubot.Parser(url)
         await msg.delete()
+
         item_list = cou_parser.get_items(count)
         
         if item_list is None:
-            await ctx.send("검색결과가 없습니다.")
-            return
+            return await ctx.send("검색결과가 없습니다.")
 
-        emojis = ["🔍", "🔔", "📥"]
         for item in item_list:
-            msg = await ctx.send(embed=embed_maker("serch_output_simple",**item).get)
-            for emoji in emojis:
-                await msg.add_reaction(emoji)
-        reaction, user = await bot.wait_for("reaction_add", check=lambda r, u: r.emoji in emojis and r.me is True)
+            embed = coubot.FormBase.search_output_simple(**item)
+            buttons = [
+                create_button(
+                    style=ButtonStyle.secondary,
+                    emoji="🔍",
+                    custom_id="search_btn"
+                ),
+                create_button(
+                    style=ButtonStyle.secondary,
+                    emoji="🔔",
+                    custom_id="bell_btn"
+                ),
+                create_button(
+                    style=ButtonStyle.secondary,
+                    emoji="📥",
+                    custom_id="save_to_wish_btn"
+                )
+            ]
+
+            action_row = create_actionrow(*buttons)
+
+            msg = await ctx.send(embed=embed, components=[action_row])
+            button_ctx = await wait_for_component(client=bot, messages=msg)
+
+            print(button_ctx.origin_message_id)
+
 
 @bot.command(name="등록")
 async def registration(ctx, product_id=None, product_price=None):
