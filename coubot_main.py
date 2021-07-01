@@ -1,16 +1,17 @@
 import os
 import coubot
-import asyncio
 import discord
+import asyncio
 import nest_asyncio
 
 from tendo import singleton
 from dotenv import load_dotenv
 from discord.ext import commands
+from discord_slash import SlashCommand
 from discord_slash.model import ButtonStyle
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from discord_slash.utils.manage_commands import create_option
 from discord_slash.utils.manage_components import *
-
 
 from coubot import triggers
 from coubot.embed_form import embed_factory as embed_maker
@@ -19,6 +20,8 @@ nest_asyncio.apply()
 me = singleton.SingleInstance()
 
 bot = commands.Bot(command_prefix="!")
+slash = SlashCommand(bot, sync_commands=True, override_type=True)
+test_guild_ids = [820642064365649930]
 load_dotenv("token.env")
 
 extensions = [
@@ -35,53 +38,65 @@ async def on_ready():
     print(f"봇 이름: {bot.user}")
     print(f"ID: {bot.user.id}")
 
-#@bot.event
-#async def on_command_error(error):
-#    pass
 
 # 쿠팡 관련 커맨드
-@bot.group(name="쿠팡")
-async def coupang(ctx):
-    if ctx.subcommand_passed is None:
-        embed = discord.Embed() # 나중에 설명 추가
-        await ctx.send(embed=embed)
+@slash.slash(
+    name="쿠팡",
+    description="가장 기본적인 명령어들입니다.",
+    guild_ids=test_guild_ids
+)
+async def group_coupang(ctx):
+    pass
 
 
-@coupang.command(name="메인", aliases=["기본", "홈"])
-async def Gcoupang_main(ctx):
-    await ctx.send(embed=embed_maker("coupang_main").get)
+@slash.subcommand(
+    base="group_coupang",
+    name="홈",
+    description="여기다 설명 써봐",
+    guild_ids=test_guild_ids
+)
+async def group_coupang_cmd_main(ctx):
+    embed = coubot.FormBase.coupang_main()
+    await ctx.send(embed=embed)
 
 
-@coupang.command(name="검색")
-async def Gcoupang_search(ctx, count=3):
-    embed_waiting = embed_maker("serch_waiting")
-    msg = await ctx.send(embed=embed_waiting.get)
-    
-    async with ctx.typing():
-        embed_waiting.insert("go")
-        await msg.edit(embed=embed_waiting.get)
-        wait_m = await bot.wait_for('message', check=lambda m: m.author == ctx.author and m.channel == ctx.channel)
+@slash.subcommand(
+    base="group_coupang",
+    name="검색",
+    description="쿠팡에서 검색을 합니다.",
+    options=[
+        create_option(
+            name="검색어",
+            description="검색어를 입력해주세요.",
+            option_type=3,
+            required=True
+        ),
+        create_option(
+            name="개수",
+            description="표시할 최대 개수를 입력해주세요.",
+            option_type=4,
+            required=False
+        )
+    ],
+    connector={
+        "검색어": "search_term",
+        "개수": "count"
+    },
+    guild_ids=test_guild_ids
+)
+async def group_coupang_cmd_search(ctx, search_term: str, count: int = 3):
 
-    try:
-        await wait_m.delete()
-    except discord.Forbidden:
-        pass
+    if search_term.startswith("https://"):
 
-    content = wait_m.content
-    if content.startswith("https://"):
-
-        if content.startswith("https://www.coupang.com/vp/products/"):
+        if search_term.startswith("https://www.coupang.com/vp/products/"):
             pass
 
         else:
-            await msg.edit(embed=embed_maker("serch_oops").get)
+            await ctx.send(embed=embed_maker("serch_oops").get)
 
     else:
-        await msg.edit(embed=embed_maker("serch_ing").get)
-        
-        url = "https://www.coupang.com/np/search?component=&q=%s" % content
+        url = "https://www.coupang.com/np/search?component=&q=%s" % search_term
         cou_parser = coubot.Parser(url)
-        await msg.delete()
 
         item_list = cou_parser.get_items(count)
         
@@ -89,7 +104,17 @@ async def Gcoupang_search(ctx, count=3):
             return await ctx.send("검색결과가 없습니다.")
 
         for item in item_list:
-            embed = coubot.FormBase.search_output_simple(**item)
+            embed = coubot.FormBase.search_output_simple(
+                name=item["name"],
+                url=item["url"],
+                price=item["price"],
+                image_url=item["image_url"],
+                is_rocket=item["is_rocket"],
+                rating=float(item["rating"]),
+                rating_count=item["rating_count"],
+                discount_rate=item["discount_rate"],
+                base_price=item["base_price"]
+            )
             buttons = [
                 create_button(
                     style=ButtonStyle.secondary,
@@ -109,11 +134,10 @@ async def Gcoupang_search(ctx, count=3):
             ]
 
             action_row = create_actionrow(*buttons)
+            await ctx.send(embed=embed, components=[action_row])
 
-            msg = await ctx.send(embed=embed, components=[action_row])
-            button_ctx = await wait_for_component(client=bot, messages=msg)
-
-            print(button_ctx.origin_message_id)
+        button_ctx = await wait_for_component(client=bot, components=[action_row])
+        print(button_ctx.origin_message_id)
 
 
 @bot.command(name="등록")
