@@ -2,10 +2,10 @@ import bs4
 import requests
 
 
-def text_safety(bs):
+def text_safety(bs, default=""):
 
     if not bs:
-        return ""
+        return default
 
     return bs.text
 
@@ -18,7 +18,8 @@ class Parser:
 
         self.url = url
         self.header = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                          "Chrome/89.0.4389.82 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
         }
 
@@ -62,6 +63,14 @@ class Parser:
         datas = []
             
         for item in items_list:
+            rating_count = text_safety(item.find("span", {"class": "rating-total-count"}))
+
+            if rating_count != "":
+                rating_count = int(rating_count.replace("(", "").replace(")", ""))
+
+            else:
+                rating_count = None
+
             data = {
                 "name": item.find("dd", {"class": "descriptions"}).find("div", {"class": "name"}).text,
                 "url": "https://www.coupang.com%s" % item.find("a").get("href"),
@@ -73,7 +82,7 @@ class Parser:
                 "base_price": text_safety(item.find("del", {"class": "base-price"})),
                 "discount_rate": text_safety(item.find("span", {"class": "instant-discount-rate"})),
                 "rating": text_safety(item.find("em", {"class": "rating"})),
-                "rating_count": text_safety(item.find("span", {"class": "rating-total-count"}))
+                "rating_count": rating_count
             }
                 
             datas.append(data)
@@ -91,8 +100,8 @@ class Parser:
         if price == '':
             return None
         
-        price = price.replace(',','')
-        price = price.replace('원','')
+        price = price.replace(',', '')
+        price = price.replace('원', '')
         
         if self.url.startswith("https://www.coupang.com/vp/products/") is False:
             raise
