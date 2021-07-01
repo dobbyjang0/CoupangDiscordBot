@@ -1,19 +1,16 @@
-import nest_asyncio
+import os
+import coubot
 import asyncio
 import discord
-import pandas
-import os
-import bs4
-import requests
+import nest_asyncio
 
-from discord.ext import commands, tasks
+from discord.ext import commands
 from dotenv import load_dotenv
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from tendo import singleton
 
-from res.Class import triggers
-from res.Class import parser
-from res.Class.embed_form import embed_factory as embed_maker
+from coubot import triggers, parser
+from coubot.embed_form import embed_factory as embed_maker
 
 nest_asyncio.apply()
 me = singleton.SingleInstance()

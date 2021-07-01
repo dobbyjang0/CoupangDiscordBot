@@ -6,7 +6,9 @@ def text_safety(bs):
         return ""
     return bs.text
 
-from . import check
+
+from coubot import check
+
 
 class parser:
     def __init__(self, url):

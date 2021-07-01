@@ -1,5 +1,5 @@
-from . import db
-from . import parser
+from coubot import parser, db
+
 
 class MetaSingleton(type):
     _instances = {}
