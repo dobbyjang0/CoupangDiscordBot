@@ -3,7 +3,7 @@ import aiomysql
 import functools
 import configparser
 
-from res.Class import errors
+from coubot import errors
 
 from typing import Union
 
