@@ -3,13 +3,17 @@ import discord
 
 from .errors import NoneFormName
 
-def embed_factory(form_name, *arg, **kwargs):
-    try:
-        return getattr(sys.modules[__name__], form_name)(*arg, **kwargs)
-    except AttributeError:
-        raise NoneFormName(form_name)
 
-#아래의 form들은 모두 이 클래스를 상속할 것
+def embed_factory(form_name, *arg, **kwargs):
+
+    if hasattr(sys.modules[__name__], form_name):
+        return getattr(sys.modules[__name__], form_name)(*arg, **kwargs)
+
+    raise NoneFormName(form_name)
+
+
+# 아래의 form들은 모두 이 클래스를 상속할 것
+
 class formbase:
     def __init__(self, *arg, **kwarg):
         self.embed = discord.Embed()
