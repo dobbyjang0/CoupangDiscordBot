@@ -8,8 +8,10 @@ import requests
 
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from tendo import singleton
 
+from res.Class import triggers
 from res.Class import parser
 from res.Class.embed_form import embed_factory as embed_maker
 
@@ -20,11 +22,15 @@ bot = commands.Bot(command_prefix="!")
 load_dotenv("token.env")
 
 extensions = [
-    #cogs
+    "res.Cogs.alarms"
 ]
 
 @bot.event
 async def on_ready():
+    sched = AsyncIOScheduler(timezone="Asia/Seoul")
+    sched.add_job(triggers.AlarmTrigger(bot).test_process, 'interval', seconds=30)
+    sched.start()
+    
     print("--- 연결 성공 ---")
     print(f"봇 이름: {bot.user}")
     print(f"ID: {bot.user.id}")
@@ -36,7 +42,9 @@ async def on_ready():
 # 쿠팡 관련 커맨드
 @bot.group(name="쿠팡")
 async def coupang(ctx):
-    pass
+    if ctx.subcommand_passed is None:
+        embed = discord.Embed() # 나중에 설명 추가
+        await ctx.send(embed=embed)
 
 @coupang.command(name="메인", aliases=["기본", "홈"])
 async def Gcoupang_main(ctx):
@@ -82,16 +90,85 @@ async def Gcoupang_search(ctx, count=3):
                 await msg.add_reaction(emoji)
         reaction, user = await bot.wait_for("reaction_add", check=lambda r, u: r.emoji in emojis and r.me is True)
 
-# 킬 관련 커맨드
-async def get_appinfo():
+@bot.command(name="등록")
+async def registration(ctx, product_id=None, product_price=None):
+    alarms = bot.get_cog('AlarmCog')
+    print(product_id, product_price)
+    await alarms.add_alarm(ctx, product_id, product_price)
+
+@bot.command(name="목록")
+async def alarm_list(ctx):
+    alarms = bot.get_cog('AlarmCog')
+    await alarms.read_alarm_list(ctx)
+
+@bot.command(name="삭제")
+async def alarm_delete(ctx, product_id=None):
+    alarms = bot.get_cog('AlarmCog')
+    await alarms.delete_alarm(ctx, product_id)   
+
+@bot.command(name="가격수정")
+async def update_alarm(ctx, product_id=None, product_price=None):
+    alarms = bot.get_cog('AlarmCog')
+    await alarms.update_alarm(ctx, product_id, product_price)   
+
+# --- Team Only Commands --- #
+
+async def get_appinfo(): # 팀들을 User로 얻기
     return await bot.application_info()
 
-def is_teamembers():
+def is_teamembers(): # 팀 멤버 확인 Decorator
     def predicate(ctx):
         app_info = asyncio.run(get_appinfo())
         team = app_info.team
         return ctx.author in team.members
     return commands.check(predicate)
+
+@bot.group()
+@is_teamembers()
+async def cogs(ctx):
+    pass
+
+@cogs.command()
+async def load(ctx, name, package=None):
+    try:
+        bot.load_extension(name, package)
+    except commands.ExtensionNotFound:
+        embed = embed_maker("extension_NotFound")
+        await ctx.send(embed=embed)
+    except commands.ExtensionAlreadyLoaded:
+        embed = discord.Embed(description="이미 불러와져있습니다.")
+        await ctx.send(embed=embed)
+    else:
+        embed = discord.Embed(description="로드 성공")
+        await ctx.send(embed=embed)
+
+@cogs.command()
+async def unload(ctx, name, package=None):
+    try:
+        bot.unload_extension(name, package)
+    except commands.ExtensionNotFound:
+        embed = embed_maker("extension_NotFound")
+        await ctx.send(embed=embed)
+    except commands.ExtensionNotLoaded:
+        embed = embed_maker("extension_NotLoaded")
+        await ctx.send(embed=embed)
+    else:
+        embed = discord.Embed(description="언로드 성공")
+        await ctx.send(embed=embed)
+
+@cogs.command()
+async def reload(ctx, name, package=None):
+    try:
+        bot.reload_extension(name, package)
+    except commands.ExtensionNotFound:
+        embed = embed_maker("extension_NotFound")
+        await ctx.send(embed=embed)
+    except commands.ExtensionNotLoaded:
+        embed = embed_maker("extension_NotLoaded")
+        await ctx.send(embed=embed)
+    else:
+        embed = discord.Embed(description="리로드 성공")
+        await ctx.send(embed=embed)
 
 @bot.command(name="킬")
 @is_teamembers()
@@ -130,7 +207,6 @@ if __name__ == "__main__":
     for extension in extensions:
         try:
             bot.load_extension(extension)
-            print('loaded %s' % extension)
         except Exception as error:
             print('fail to load %s: %s' % (extension, error))
         else:

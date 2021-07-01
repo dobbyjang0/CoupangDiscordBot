@@ -1,13 +1,13 @@
 import sys
 import discord
 
-from .errors import NoneFormname
+from .errors import NoneFormName
 
 def embed_factory(form_name, *arg, **kwargs):
     try:
         return getattr(sys.modules[__name__], form_name)(*arg, **kwargs)
     except AttributeError:
-        raise NoneFormname(form_name)
+        raise NoneFormName(form_name)
 
 #아래의 form들은 모두 이 클래스를 상속할 것
 class formbase:
@@ -31,11 +31,11 @@ class formbase:
 class coupang_main(formbase):
     def init_make(self):
         descriptions = {
-        "골드박스": "https://coupa.ng/bSQUxy",
-        "로켓프레쉬": "https://coupa.ng/bSQUDh",
-        "로켓와우": "https://coupa.ng/bSQUFP",
-        "로켓직구": "https://coupa.ng/bSQUJ4",
-        "로켓배송": "https://coupa.ng/bSQUMW"
+            "골드박스": "https://coupa.ng/bSQUxy",
+            "로켓프레쉬": "https://coupa.ng/bSQUDh",
+            "로켓와우": "https://coupa.ng/bSQUFP",
+            "로켓직구": "https://coupa.ng/bSQUJ4",
+            "로켓배송": "https://coupa.ng/bSQUMW"
         }
         self.embed.title = "쿠팡"
         self.embed.description = "\n".join("▶ [**%s**](<%s>)" % (k, v) for k, v in descriptions.items())
@@ -93,6 +93,14 @@ class kill_count(formbase):
 class kill_canceled(formbase):
     def init_make(self):
         self.embed.title = "종료를 취소합니다."
-        
+       
+class extension_NotFound(formbase):
+    def init_make(self):
+        self.embed.description = "확장자를 찾을 수 없습니다."
+
+class extension_NotLoaded(formbase):
+    def init_make(self):
+        self.embed.description = "로드되지 않은 확장자입니다."
+
 if __name__ == "__main__":
     print(embed_factory("kill_count", 5).embed.title)

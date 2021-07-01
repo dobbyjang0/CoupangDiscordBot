@@ -1,6 +1,11 @@
 import bs4
 import requests
 
+def text_safety(bs):
+    if not bs:
+        return ""
+    return bs.text
+
 from . import check
 
 class parser:
@@ -51,11 +56,6 @@ class parser:
 
         # 정보 뽑아 output 사전에 저장한다.
         datas = []
-        def text_safety(bs):
-            if not bs:
-                return ""
-            else:
-                return bs.text
             
         for item in items_list:
             data = {
@@ -78,6 +78,18 @@ class parser:
     
     def get_item_detail(self):
         #에러 처리
+        
+        if not self.url.startswith("https://www.coupang.com/vp/products/"):
+            raise TypeError
+        
+        price = text_safety(self.bs.find("span", {"class": "total-price"}))
+        
+        if price == '':
+            return None
+        
+        price = price.replace(',','')
+        price = price.replace('원','')
+        
         check.check().is_startswith(self.url, "https://www.coupang.com/vp/products/")
 
         item = self.bs.find("div", {"class": "prod-atf"})
@@ -85,6 +97,7 @@ class parser:
         price = item.find("span", {"class": "total-price"}).get_text(strip=True)
         price = price.replace(',', '')
         price = price.replace('원', '')
+
         price = int(price)
 
         return {'price': price}
