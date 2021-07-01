@@ -1,6 +1,8 @@
 import sys
 import discord
 
+from typing import Union
+
 from .errors import NoneFormName
 
 
@@ -13,22 +15,64 @@ def embed_factory(form_name, *arg, **kwargs):
 
 
 # 아래의 Form들은 모두 이 클래스를 상속할 것
-class FormBase:
-    def __init__(self, *arg, **kwarg):
-        self.embed = discord.Embed()
-        self.init_make()
-        if arg is not None and kwarg is not None:
-            self.insert(*arg, **kwarg)
+class FormBase(discord.Embed):
 
-    def init_make(self):
-        pass
-
-    def insert(self, *arg, **kwarg):
-        pass
-
-    @property
     def get(self):
-        return self.embed
+        return self
+
+    @classmethod
+    def search_output_simple(
+            cls,
+            name: str,
+            url: str,
+            price: Union[int, str],
+            image_url: str,
+            is_rocket: bool,
+            rating: float,
+            rating_count,
+            discount_rate,
+            base_price
+    ):
+
+        self = cls()
+
+        def make_rating_to_moon():
+            full_moon = int(rating)
+            half_moon = rating % 1
+
+            empty_moons = "🌕" * full_moon
+
+            if half_moon == 0.5:
+                return f"{empty_moons}🌗"
+
+            return empty_moons
+
+        if rating == "":
+            rating_info = ""
+
+        else:
+            rating_moon = make_rating_to_moon()
+            rating_info = f" {rating_moon} {rating_count}"
+
+        price_text = f"**{price}원**"
+
+        if discount_rate == "":
+            self.description = price_text
+
+        else:
+            self.description = f"{price_text}\n{discount_rate} ~~{base_price} 원~~"
+
+        self.title = name
+        self.url = url
+
+        if is_rocket is True:
+            author = f"🚀 {rating_info}"
+            self.set_author(name=author)
+
+        self.set_thumbnail(url=image_url)
+
+        return self
+
 
 # 처음에 안바뀌는건 init_make, 처음에 값을 넣어줘야 되는건 insert에서 해줘야함
 class coupang_main(FormBase):
@@ -45,32 +89,6 @@ class coupang_main(FormBase):
         self.embed.url = "https://coupa.ng/bSQJi8"
         self.embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/804815694717911080/817096183637344286/img.png")
 
-class serch_output_simple(FormBase):
-    def insert(self, name, url, price, image_url, is_rocket, rating,
-               rating_count, discount_rate, base_price, **kwarg):
-        def make_rating_to_moon(rating: float) -> str:
-            rating = float(rating)
-            full_moon = int(rating)
-            half_moon = rating % 1
-            return "🌕" * full_moon + ("🌗" if half_moon == 0.5 else "")
-        
-        if rating == "":
-            rating_info = ""
-        else:
-            rating_moon = make_rating_to_moon(rating)
-            rating_info = f" {rating_moon} {rating_count}"
-            
-        price_text: str = "**%s원**" % price
-        if discount_rate == "":
-            self.embed.description = price_text
-        else:
-            self.embed.description = price_text + f"\n{discount_rate} ~~{base_price}원~~"
-        
-        self.embed.title = name
-        self.embed.url = url
-        author = ("🚀" if is_rocket else "") + rating_info
-        self.embed.set_author(name = author)
-        self.embed.set_thumbnail(url=image_url)
 
 class serch_waiting(FormBase):
     def init_make(self):
