@@ -1,7 +1,8 @@
-import nest_asyncio
+import os
+import coubot
 import asyncio
 import discord
-import os
+import nest_asyncio
 
 from discord.ext import commands
 from dotenv import load_dotenv
