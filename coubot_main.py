@@ -100,8 +100,28 @@ async def group_coupang_cmd_search(ctx, search_term: str, count: int = 3):
 
         item_list = cou_parser.get_items(count)
         
-        if item_list is None:
+        if not item_list:
             return await ctx.send("검색결과가 없습니다.")
+
+        buttons = [
+            create_button(
+                style=ButtonStyle.secondary,
+                emoji="🔍",
+                custom_id="search_btn"
+            ),
+            create_button(
+                style=ButtonStyle.secondary,
+                emoji="🔔",
+                custom_id="bell_btn"
+            ),
+            create_button(
+                style=ButtonStyle.secondary,
+                emoji="📥",
+                custom_id="save_to_wish_btn"
+            )
+        ]
+
+        action_row = create_actionrow(*buttons)
 
         for item in item_list:
             embed = coubot.FormBase.search_output_simple(
@@ -115,25 +135,6 @@ async def group_coupang_cmd_search(ctx, search_term: str, count: int = 3):
                 discount_rate=item["discount_rate"],
                 base_price=item["base_price"]
             )
-            buttons = [
-                create_button(
-                    style=ButtonStyle.secondary,
-                    emoji="🔍",
-                    custom_id="search_btn"
-                ),
-                create_button(
-                    style=ButtonStyle.secondary,
-                    emoji="🔔",
-                    custom_id="bell_btn"
-                ),
-                create_button(
-                    style=ButtonStyle.secondary,
-                    emoji="📥",
-                    custom_id="save_to_wish_btn"
-                )
-            ]
-
-            action_row = create_actionrow(*buttons)
             await ctx.send(embed=embed, components=[action_row])
 
         button_ctx = await wait_for_component(client=bot, components=[action_row])
