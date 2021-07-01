@@ -1,16 +1,18 @@
 import bs4
 import requests
 
-def text_safety(bs):
-    if not bs:
-        return ""
-    return bs.text
-
-
 from coubot import check
 
 
-class parser:
+def text_safety(bs):
+
+    if not bs:
+        return ""
+
+    return bs.text
+
+
+class Parser:
     def __init__(self, url):
         self.url = url
         self.header = {
@@ -33,7 +35,7 @@ class parser:
         return requests.get(self.url).status_code
 
     def get_items(self, limit=3, is_except_ads: bool=True):
-        #에러 처리
+        # 에러 처리
         check.check().is_startswith(self.url, "https://www.coupang.com/np/search?component=&q=")
 
         assert isinstance(limit, int), "limit은 정수여야합니다."
@@ -105,5 +107,5 @@ class parser:
         return {'price': price}
 
 if __name__ == "__main__":
-    parser = parser("https://www.coupang.com/vp/products/286438028")
+    parser = Parser("https://www.coupang.com/vp/products/286438028")
     print(parser.get_item_detail())
