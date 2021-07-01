@@ -59,12 +59,12 @@ class FormBase(discord.Embed):
             full_moon = int(rating)
             half_moon = rating % 1
 
-            empty_moons = "🌕" * full_moon
+            full_moons = "🌕" * full_moon
 
             if half_moon == 0.5:
-                return f"{empty_moons}🌗"
+                return f"{full_moons}🌗"
 
-            return empty_moons
+            return full_moons
 
         if rating == "":
             rating_info = ""
