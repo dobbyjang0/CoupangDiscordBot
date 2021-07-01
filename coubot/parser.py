@@ -1,8 +1,6 @@
 import bs4
 import requests
 
-from coubot import check
-
 
 def text_safety(bs):
 
@@ -13,7 +11,11 @@ def text_safety(bs):
 
 
 class Parser:
-    def __init__(self, url):
+    def __init__(self, url: str):
+
+        if url.startswith("https://www.coupang.com/np/search?component=&q=") is False:
+            raise
+
         self.url = url
         self.header = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36",
@@ -35,8 +37,6 @@ class Parser:
         return requests.get(self.url).status_code
 
     def get_items(self, limit=3, is_except_ads: bool = True):
-        # 에러 처리
-        check.check().is_startswith(self.url, "https://www.coupang.com/np/search?component=&q=")
 
         assert isinstance(limit, int), "limit은 정수여야합니다."
         assert limit >= 0, "limit은 0보다 커야합니다."
@@ -81,7 +81,7 @@ class Parser:
         return datas
     
     def get_item_detail(self):
-        #에러 처리
+        # 에러 처리
         
         if not self.url.startswith("https://www.coupang.com/vp/products/"):
             raise TypeError
@@ -94,7 +94,8 @@ class Parser:
         price = price.replace(',','')
         price = price.replace('원','')
         
-        check.check().is_startswith(self.url, "https://www.coupang.com/vp/products/")
+        if self.url.startswith("https://www.coupang.com/vp/products/") is False:
+            raise
 
         item = self.bs.find("div", {"class": "prod-atf"})
         
@@ -105,6 +106,7 @@ class Parser:
         price = int(price)
 
         return {'price': price}
+
 
 if __name__ == "__main__":
     parser = Parser("https://www.coupang.com/vp/products/286438028")
