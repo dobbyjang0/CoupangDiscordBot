@@ -1,4 +1,4 @@
-from coubot import parser, db
+from coubot import Parser, db
 
 
 class MetaSingleton(type):
@@ -26,7 +26,7 @@ class AlarmTrigger(metaclass = MetaSingleton):
             
             # 현재 가격 스캔, 나중에 파셔쪽에서 클래스 분리, 함수화 시키기
             url = "https://www.coupang.com/vp/products/%s" % product_id
-            cou_parser = parser.parser(url)
+            cou_parser = Parser.parser(url)
             now_price = cou_parser.get_item_detail()['price']
             
             if now_price != latest_price:

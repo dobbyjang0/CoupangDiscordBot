@@ -34,7 +34,7 @@ class Parser:
     def status_code(self):
         return requests.get(self.url).status_code
 
-    def get_items(self, limit=3, is_except_ads: bool=True):
+    def get_items(self, limit=3, is_except_ads: bool = True):
         # 에러 처리
         check.check().is_startswith(self.url, "https://www.coupang.com/np/search?component=&q=")
 

@@ -1,6 +1,6 @@
 from discord.ext import commands
 
-from coubot import parser, db
+from coubot import Parser, db
 
 
 class AlarmCog(commands.Cog):
@@ -15,7 +15,7 @@ class AlarmCog(commands.Cog):
         # 현재 가격 스캔, 나중에 파셔쪽에서 클래스 분리, 함수화 시키기
         url = f"https://www.coupang.com/vp/products/{product_id}"
         print(url)
-        cou_parser = parser.parser(url)
+        cou_parser = Parser.parser(url)
 
         if not cou_parser.get_item_detail():
             await ctx.send('없는 제품')
