@@ -1,10 +1,37 @@
 import pymysql
 import aiomysql
 import functools
+import configparser
 
 from res.Class import errors
 
 from typing import Union
+
+
+class BOTConfig:
+
+    def __init__(self, name):
+        self._name = name
+        self.config = configparser.ConfigParser()
+
+    def read(self):
+        return self.config.read("config.ini", encoding="utf-8")
+
+    @property
+    def section(self):
+        return self.config[self.name]
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
+
+    @classmethod
+    def database(cls):
+        return cls("DataBase")
 
 
 def connection_handler():
@@ -104,19 +131,31 @@ class Database:
             user: str = "root",
             password: str = "password",
             passwd: str = None,
-            port: int = 3306
+            port: int = 3306,
+            quick_login: bool = True
     ):
 
         if not database and not db:
             raise Exception("database 또는 db가 충족되어야합니다.")
 
-        self.session = DatabaseSession(
-            database=database or db,
-            host=host,
-            user=user,
-            password=passwd or password,
-            port=port
-        )
+        if quick_login is False:
+            self.session = DatabaseSession(
+                database=database or db,
+                host=host,
+                user=user,
+                password=passwd or password,
+                port=port
+            )
+
+        else:
+            config = BOTConfig.database()
+            self.session = DatabaseSession(
+                database=database or db,
+                host=config.section["host"],
+                user=config.section["user"],
+                password=config.section["password"],
+                port=int(config.section["port"])
+            )
 
 
 class ScanTable(Database):
