@@ -40,7 +40,6 @@ async def on_ready():
     sched = AsyncIOScheduler(timezone="Asia/Seoul")
     sched.add_job(triggers.AlarmTrigger(bot).test_process, 'interval', seconds=30)
     sched.start()
-    
     print("--- 연결 성공 ---")
     print(f"봇 이름: {bot.user}")
     print(f"ID: {bot.user.id}")
@@ -91,6 +90,10 @@ async def group_coupang_cmd_search(
         dropdown: bool = False,
         hidden_message: bool = False
 ):
+
+    if count > 9:
+        embed = discord.Embed(description="최대 9개의 결과만 얻을 수 있습니다.")
+        return await ctx.send(embed=embed, hidden=True)
 
     if coubot.utils.is_startswith_http_url(search_term):
 
@@ -155,7 +158,7 @@ async def group_coupang_cmd_search(
                 hidden=hidden_message
             )
 
-        button_ctx = await wait_for_component(
+        select_ctx = await wait_for_component(
             client=bot,
             components=[button_action_row]
         )
@@ -167,7 +170,8 @@ async def group_coupang_cmd_search(
             option = create_select_option(
                 label=coubot.utils.label_maker(embed.title),
                 description=embed.description,
-                value=str(idx)
+                value=str(idx),
+                emoji=f"{idx + 1}\U000020E3"
             )
             select_options.append(option)
 
@@ -178,20 +182,48 @@ async def group_coupang_cmd_search(
             min_values=1,
             max_values=1
         )
-        select_row = create_actionrow(select)
+        select_row = [create_actionrow(select)]
+        button_component = [coubot.utils.pon_buttons()]
 
         msg = await ctx.send(
             embeds=embeds,
             hidden=hidden_message,
-            components=[select_row]
+            components=select_row
         )
 
         start_time = time.time()
 
         while time.time() - start_time <= 120:
 
-            button_ctx = await wait_for_component(client=bot, messages=msg)
+            select_ctx = await wait_for_component(
+                client=bot,
+                messages=msg,
+                components=select_row
+            )
 
+            first_selected_option = select_ctx.selected_options[0]
+            selected_index: int = int(first_selected_option)
+
+            await select_ctx.edit_origin(
+                content="이 상품으로 보시겠습니까?",
+                embed=embeds[selected_index],
+                components=button_component
+            )
+
+            button_ctx = await wait_for_component(
+                client=bot,
+                messages=msg,
+                components=button_component
+            )
+
+            if button_ctx.custom_id == "ture_btn":
+                return
+
+            await button_ctx.edit_origin(
+                content=None,
+                embeds=embeds,
+                components=select_row
+            )
 
 
 async def registration(ctx, product_id=None, product_price=None):
