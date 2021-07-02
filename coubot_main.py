@@ -135,7 +135,7 @@ async def group_coupang_cmd_search(ctx, search_term: str, count: int = 3):
                 discount_rate=item["discount_rate"],
                 base_price=item["base_price"]
             )
-            await ctx.send(embed=embed, components=[action_row])
+            await ctx.send(embed=embed, components=[action_row], hidden=False)
 
         button_ctx = await wait_for_component(client=bot, components=[action_row])
         print(button_ctx.origin_message_id)
