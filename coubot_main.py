@@ -7,10 +7,10 @@ import nest_asyncio
 from tendo import singleton
 from dotenv import load_dotenv
 from discord.ext import commands
-from discord_slash import SlashCommand
+from discord_slash import SlashCommand, SlashContext
 from discord_slash.model import ButtonStyle
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from discord_slash.utils.manage_commands import create_option
+from discord_slash.utils.manage_commands import create_option, create_choice
 from discord_slash.utils.manage_components import *
 
 from coubot import triggers
@@ -39,29 +39,8 @@ async def on_ready():
     print(f"ID: {bot.user.id}")
 
 
-# 쿠팡 관련 커맨드
+# 쿠팡 커맨드
 @slash.slash(
-    name="쿠팡",
-    description="가장 기본적인 명령어들입니다.",
-    guild_ids=test_guild_ids
-)
-async def group_coupang(ctx):
-    pass
-
-
-@slash.subcommand(
-    base="group_coupang",
-    name="홈",
-    description="여기다 설명 써봐",
-    guild_ids=test_guild_ids
-)
-async def group_coupang_cmd_main(ctx):
-    embed = coubot.FormBase.coupang_main()
-    await ctx.send(embed=embed)
-
-
-@slash.subcommand(
-    base="group_coupang",
     name="검색",
     description="쿠팡에서 검색을 합니다.",
     options=[
@@ -76,15 +55,37 @@ async def group_coupang_cmd_main(ctx):
             description="표시할 최대 개수를 입력해주세요.",
             option_type=4,
             required=False
+        ),
+        create_option(
+            name="UI",
+            description="UI Type",
+            option_type=4,
+            choices=[
+                create_choice(
+                    name="카드형",
+                    value=1
+                ),
+                create_choice(
+                    name="Select Menu",
+                    value=2
+                )
+            ],
+            required=False
         )
     ],
     connector={
         "검색어": "search_term",
-        "개수": "count"
+        "개수": "count",
+        "UI": "ui_type"
     },
     guild_ids=test_guild_ids
 )
-async def group_coupang_cmd_search(ctx, search_term: str, count: int = 3):
+async def group_coupang_cmd_search(
+        ctx: SlashContext,
+        search_term: str,
+        count: int = 3,
+        ui_type: int = 1
+):
 
     if search_term.startswith("https://"):
 
@@ -135,7 +136,7 @@ async def group_coupang_cmd_search(ctx, search_term: str, count: int = 3):
                 discount_rate=item["discount_rate"],
                 base_price=item["base_price"]
             )
-            await ctx.send(embed=embed, components=[action_row], hidden=False)
+            await ctx.send(embed=embed, components=[action_row], hidden=True)
 
         button_ctx = await wait_for_component(client=bot, components=[action_row])
         print(button_ctx.origin_message_id)
