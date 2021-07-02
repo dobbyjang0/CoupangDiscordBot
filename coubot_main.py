@@ -1,9 +1,11 @@
 import os
+import time
 import coubot
 import discord
 import asyncio
 import nest_asyncio
 
+from typing import List
 from tendo import singleton
 from dotenv import load_dotenv
 from discord.ext import commands
@@ -20,13 +22,19 @@ nest_asyncio.apply()
 me = singleton.SingleInstance()
 
 bot = commands.Bot(command_prefix="!")
-slash = SlashCommand(bot, sync_commands=True, override_type=True)
+slash = SlashCommand(
+    bot,
+    sync_commands=True,
+    override_type=True
+)
 test_guild_ids = [820642064365649930]
 load_dotenv("token.env")
 
 extensions = [
-    "res.Cogs.alarms"
+    'res.Cogs.alarms',
+    'res.Cogs.admin_commands'
 ]
+
 
 @bot.event
 async def on_ready():
@@ -51,32 +59,29 @@ async def on_ready():
             required=True
         ),
         create_option(
-            name="개수",
-            description="표시할 최대 개수를 입력해주세요.",
-            option_type=4,
+            name="드롭다운",
+            description="드롭 다운 형식을 사용하시겠습니까?",
+            option_type=5,
             required=False
         ),
         create_option(
-            name="UI",
-            description="UI Type",
+            name="나만보기",
+            description="우리 둘뿐이에요.",
+            option_type=5,
+            required=False
+        ),
+        create_option(
+            name="개수",
+            description="표시할 최대 개수를 입력해주세요.",
             option_type=4,
-            choices=[
-                create_choice(
-                    name="카드형",
-                    value=1
-                ),
-                create_choice(
-                    name="Select Menu",
-                    value=2
-                )
-            ],
             required=False
         )
     ],
     connector={
         "검색어": "search_term",
         "개수": "count",
-        "UI": "ui_type"
+        "드롭다운": "dropdown",
+        "나만보기": "hidden_message"
     },
     guild_ids=test_guild_ids
 )
@@ -84,71 +89,148 @@ async def group_coupang_cmd_search(
         ctx: SlashContext,
         search_term: str,
         count: int = 3,
-        ui_type: int = 1
+        dropdown: bool = False,
+        hidden_message: bool = False
 ):
 
-    if search_term.startswith("https://"):
+    if coubot.utils.is_startswith_http_url(search_term):
 
-        if search_term.startswith("https://www.coupang.com/vp/products/"):
-            pass
+        if not search_term.startswith("https://www.coupang.com/vp/products/"):
+            embed = coubot.FormBase.invalid_coupang_url()
+            return await ctx.send(embed=embed)
 
-        else:
-            await ctx.send(embed=embed_maker("serch_oops").get)
+        embed = discord.Embed()
+        embed.set_image(url="")
+        return await ctx.send(embed=embed)
+
+    url = "https://www.coupang.com/np/search?component=&q=%s" % search_term
+    cou_parser = coubot.Parser(url)
+
+    item_list = cou_parser.get_items(count)
+
+    if not item_list:
+        return await ctx.send("검색결과가 없습니다.")
+
+    buttons = [
+        create_button(
+            style=ButtonStyle.secondary,
+            emoji="🔍",
+            custom_id="search_btn"
+        ),
+        create_button(
+            style=ButtonStyle.secondary,
+            emoji="🔔",
+            custom_id="bell_btn"
+        ),
+        create_button(
+            style=ButtonStyle.secondary,
+            emoji="📥",
+            custom_id="save_to_wish_btn"
+        )
+    ]
+
+    button_action_row = create_actionrow(*buttons)
+
+    embeds = []
+
+    for item in item_list:
+        embed = coubot.FormBase.search_output_simple(
+            name=item["name"],
+            url=item["url"],
+            price=item["price"],
+            image_url=item["image_url"],
+            is_rocket=item["is_rocket"],
+            rating=float(item["rating"]),
+            rating_count=item["rating_count"],
+            discount_rate=item["discount_rate"],
+            base_price=item["base_price"]
+        )
+        embeds.append(embed)
+
+    if dropdown is False:
+
+        for embed in embeds:
+            await ctx.send(
+                embed=embed,
+                components=[button_action_row],
+                hidden=hidden_message
+            )
+
+        button_ctx = await wait_for_component(
+            client=bot,
+            components=[button_action_row]
+        )
 
     else:
-        url = "https://www.coupang.com/np/search?component=&q=%s" % search_term
-        cou_parser = coubot.Parser(url)
+        select_options = []
 
-        item_list = cou_parser.get_items(count)
-        
-        if not item_list:
-            return await ctx.send("검색결과가 없습니다.")
+        def label_maker(string: str):
+            split_strings: List[str] = string.split()
+            list_length = len(split_strings)
 
-        buttons = [
-            create_button(
-                style=ButtonStyle.secondary,
-                emoji="🔍",
-                custom_id="search_btn"
-            ),
-            create_button(
-                style=ButtonStyle.secondary,
-                emoji="🔔",
-                custom_id="bell_btn"
-            ),
-            create_button(
-                style=ButtonStyle.secondary,
-                emoji="📥",
-                custom_id="save_to_wish_btn"
+            result = []
+            length = 0
+
+            for index, split_string in enumerate(split_strings, start=1):
+                len_string = len(split_string)
+
+                if list_length == index:
+                    result.append(split_string[:25])
+                    return " ".join(result)
+
+                if length >= 25:
+                    return " ".join(result)
+
+                next_element = split_strings[index]
+
+                if 25 - length - len_string > len(next_element):
+
+                    del split_strings[index]
+                    list_length -= 1
+                    text = f"{split_string} {next_element}"
+                    length += len(text) + 2
+                    result.append(text)
+
+                    continue
+
+                return " ".join(result)
+
+        for idx, embed in enumerate(embeds):
+            option = create_select_option(
+                label=label_maker(embed.title),
+                description=embed.description,
+                value=str(idx)
             )
-        ]
+            select_options.append(option)
 
-        action_row = create_actionrow(*buttons)
+        select = create_select(
+            options=select_options,
+            custom_id="select_product",
+            placeholder="이곳에서 상품을 선택해주세요.",
+            min_values=1,
+            max_values=1
+        )
+        select_row = create_actionrow(select)
 
-        for item in item_list:
-            embed = coubot.FormBase.search_output_simple(
-                name=item["name"],
-                url=item["url"],
-                price=item["price"],
-                image_url=item["image_url"],
-                is_rocket=item["is_rocket"],
-                rating=float(item["rating"]),
-                rating_count=item["rating_count"],
-                discount_rate=item["discount_rate"],
-                base_price=item["base_price"]
-            )
-            await ctx.send(embed=embed, components=[action_row], hidden=True)
+        msg = await ctx.send(
+            embeds=embeds,
+            hidden=hidden_message,
+            components=[select_row]
+        )
 
-        button_ctx = await wait_for_component(client=bot, components=[action_row])
-        print(button_ctx.origin_message_id)
+        start_time = time.time()
+
+        while time.time() - start_time <= 120:
+
+            button_ctx = await wait_for_component(client=bot, messages=msg)
 
 
-@bot.command(name="등록")
+
 async def registration(ctx, product_id=None, product_price=None):
     alarms = bot.get_cog('AlarmCog')
     print(product_id, product_price)
     await alarms.add_alarm(ctx, product_id, product_price)
 
-@bot.command(name="목록")
 async def alarm_list(ctx):
     alarms = bot.get_cog('AlarmCog')
     await alarms.read_alarm_list(ctx)
@@ -175,43 +257,94 @@ def is_teamembers(): # 팀 멤버 확인 Decorator
         return ctx.author in team.members
     return commands.check(predicate)
 
-@bot.group()
-@is_teamembers()
+@slash.slash(
+    name="cog",
+    description="팀 전용 명령어"
+)
 async def cogs(ctx):
     pass
 
-@cogs.command()
-async def load(ctx, name, package=None):
+@slash.subcommand(
+    base="cog",
+    name="load",
+    description="load cog",
+    options=[
+        create_option(
+            name="cog_path",
+            description="cog 파일의 경로",
+            option_type=3,
+            required=True
+        )
+    ],
+    guild_ids=test_guild_ids
+)
+async def load(ctx, cog_path: str):
+
     try:
-        bot.load_extension(name, package)
+        bot.load_extension(cog_path)
+
     except commands.ExtensionNotFound:
         embed = embed_maker("extension_NotFound")
         await ctx.send(embed=embed)
+
     except commands.ExtensionAlreadyLoaded:
         embed = discord.Embed(description="이미 불러와져있습니다.")
         await ctx.send(embed=embed)
+
     else:
         embed = discord.Embed(description="로드 성공")
         await ctx.send(embed=embed)
 
-@cogs.command()
-async def unload(ctx, name, package=None):
+
+@slash.subcommand(
+    base="cog",
+    name="unload",
+    description="unload cog",
+    options=[
+        create_option(
+            name="cog_path",
+            description="cog 파일의 경로",
+            option_type=3,
+            required=True
+        )
+    ],
+    guild_ids=test_guild_ids
+)
+async def unload(ctx, cog_path):
+
     try:
-        bot.unload_extension(name, package)
+        bot.unload_extension(cog_path)
+
     except commands.ExtensionNotFound:
         embed = embed_maker("extension_NotFound")
         await ctx.send(embed=embed)
+
     except commands.ExtensionNotLoaded:
         embed = embed_maker("extension_NotLoaded")
         await ctx.send(embed=embed)
+
     else:
         embed = discord.Embed(description="언로드 성공")
         await ctx.send(embed=embed)
 
-@cogs.command()
-async def reload(ctx, name, package=None):
+
+@slash.subcommand(
+    base="cog",
+    name="reload",
+    description="reload cog",
+    options=[
+        create_option(
+            name="cog_path",
+            description="cog 파일의 경로",
+            option_type=3,
+            required=True
+        )
+    ],
+    guild_ids=test_guild_ids
+)
+async def reload(ctx, name):
     try:
-        bot.reload_extension(name, package)
+        bot.reload_extension(name)
     except commands.ExtensionNotFound:
         embed = embed_maker("extension_NotFound")
         await ctx.send(embed=embed)
