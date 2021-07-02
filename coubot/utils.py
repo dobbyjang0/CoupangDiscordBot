@@ -3,7 +3,7 @@ from discord_slash.model import ButtonStyle
 from discord_slash.utils.manage_components import create_button, create_actionrow
 
 
-def pon_buttons():
+def pon_buttons() -> dict:
 
     buttons = [
         create_button(
@@ -32,7 +32,7 @@ def is_startswith_http_url(url: str, allow_https: bool = True) -> bool:
     return False
 
 
-def label_maker(string: str):
+def label_maker(string: str) -> str:
     split_strings: List[str] = string.split()
     list_length = len(split_strings)
 
@@ -43,7 +43,7 @@ def label_maker(string: str):
         len_string = len(split_string)
 
         if list_length == index:
-            result.append(split_string[:25])
+            result.append(split_string[:25 - length])
             return " ".join(result)
 
         if length >= 25:
