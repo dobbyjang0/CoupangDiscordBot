@@ -91,6 +91,16 @@ class FormBase(discord.Embed):
 
         return self
 
+    @classmethod
+    def invalid_coupang_url(cls):
+        self = cls()
+
+        self.title = "이런!"
+        self.description = "올바른 쿠팡 상품 링크가 아닌 것 같아요."
+        self.colour = discord.Colour.red()
+
+        return self
+
 
 class serch_waiting(FormBase):
     def init_make(self):
@@ -102,12 +112,6 @@ class serch_waiting(FormBase):
 class serch_ing(FormBase):
     def init_make(self):
         self.embed.title = "검색중이에요."
-        
-class serch_oops(FormBase):
-    def init_make(self):
-        self.embed.title = "이런!"
-        self.embed.description = "올바른 쿠팡 상품 링크가 아닌 것 같아요."
-        self.embed.color = discord.Colour.red()
         
 class kill_count(FormBase):
     def insert(self, timer, *arg, **kwarg):
