@@ -234,7 +234,7 @@ async def group_coupang_cmd_search(
 
             await button_ctx.edit_origin(
                 content=None,
-                embeds=embeds,
+                embed=embed,
                 components=components
             )
 
