@@ -1,8 +1,9 @@
 import json
 import aiohttp
 
-from typing import Optional, Any, Iterable, Dict
+from .errors import Forbidden
 from urllib.parse import quote as _uriquote
+from typing import Optional, Any, Iterable, Dict
 
 
 async def json_or_text(response: aiohttp.ClientResponse) -> Any:
@@ -69,3 +70,15 @@ class CoupangHTTPClient:
 
         if self.__session:
             await self.__session.close()
+
+    def search_product(
+            self,
+            keyword: str,
+            limit: int = 50
+    ):
+
+        if keyword is None:
+            raise Forbidden("keyword is must be not NoneType.")
+
+        r = Route("GET", "/products/search?keyword={keyword}&limit={limit}", keyword=keyword, limit=limit)
+        return self.request(r)
