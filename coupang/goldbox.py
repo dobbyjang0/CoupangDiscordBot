@@ -1,4 +1,7 @@
 
+from .asset import Asset
+
+
 class GoldBox:
 
     def __init__(self, data):
@@ -10,11 +13,11 @@ class GoldBox:
 
     @property
     def product_image(self):
-        return
+        return Asset(self.data["productImage"])
 
     @property
     def product_image_url(self):
-        return self.data["productImage"]
+        return self.product_image.url
 
     def is_rocket(self) -> bool:
         return self.data["isRocket"]

@@ -38,5 +38,3 @@ class Asset(AssetMixin):
     @property
     def url(self):
         return self._url
-
-
