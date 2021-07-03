@@ -61,3 +61,5 @@ def label_maker(string: str) -> str:
             continue
 
         return " ".join(result)
+
+    return " ".join(result)
