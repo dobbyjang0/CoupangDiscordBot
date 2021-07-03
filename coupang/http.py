@@ -7,7 +7,7 @@ import hashlib
 
 from .errors import Forbidden
 from urllib.parse import quote as _uriquote
-from typing import Optional, Any, Iterable, Dict
+from typing import Optional, Any, Iterable, Dict, List
 
 
 def _dt():
@@ -137,3 +137,9 @@ class CoupangHTTPClient:
 
         r = Route("GET", "/products/search?keyword={keyword}&limit={limit}", keyword=keyword, limit=limit)
         return self.request(r)
+
+    def convert_to_partner_link(self, urls: List[str]):
+        r = Route("POST", "/deeplink")
+        coupang_urls = {"coupangUrls": urls}
+
+        return self.request(r, data=json.dumps(coupang_urls))
