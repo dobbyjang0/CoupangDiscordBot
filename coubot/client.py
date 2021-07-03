@@ -38,16 +38,6 @@ class Router:
 
 
 class Client:
-    """router, DB 클래스에 요청 하는 클래스입니다.
-    Parameters
-    ----------
-    connection : str
-        어느 클래스의 인스턴스를 생성할지 결정합니다. [DB/Router]
-    Raises
-        ------
-        error.UnknownConnectionType
-            connection 인자의 형식이 잘못되었을때 발생합니다.
-    """
 
     def __init__(self):
         self.session = Router()
