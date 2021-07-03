@@ -175,20 +175,25 @@ async def group_coupang_cmd_search(
             )
             select_options.append(option)
 
-        select = create_select(
-            options=select_options,
-            custom_id="select_product",
-            placeholder="이곳에서 상품을 선택해주세요.",
-            min_values=1,
-            max_values=1
-        )
-        select_row = [create_actionrow(select)]
-        button_component = [coubot.utils.pon_buttons()]
+        def get_select(disable: bool = False, placeholder: str = "이곳에서 상품을 선택해주세요."):
+
+            select = create_select(
+                options=select_options,
+                custom_id="select_product",
+                placeholder=placeholder,
+                min_values=1,
+                max_values=1,
+                disabled=disable
+            )
+
+            return create_actionrow(select)
+
+        components = [get_select()]
 
         msg = await ctx.send(
             embeds=embeds,
             hidden=hidden_message,
-            components=select_row
+            components=components
         )
 
         start_time = time.time()
@@ -198,31 +203,39 @@ async def group_coupang_cmd_search(
             select_ctx = await wait_for_component(
                 client=bot,
                 messages=msg,
-                components=select_row
+                components=components
             )
 
             first_selected_option = select_ctx.selected_options[0]
             selected_index: int = int(first_selected_option)
 
+            embed = embeds[selected_index]
+
+            components[0] = get_select(True, placeholder=embed.title)
+            components.append(coubot.utils.pon_buttons())
+
             await select_ctx.edit_origin(
                 content="이 상품으로 보시겠습니까?",
-                embed=embeds[selected_index],
-                components=button_component
+                embeds=[embed],
+                components=components
             )
 
             button_ctx = await wait_for_component(
                 client=bot,
                 messages=msg,
-                components=button_component
+                components=components
             )
 
             if button_ctx.custom_id == "ture_btn":
                 return
 
+            components[0] = get_select()
+            del components[1]
+
             await button_ctx.edit_origin(
                 content=None,
                 embeds=embeds,
-                components=select_row
+                components=components
             )
 
 
