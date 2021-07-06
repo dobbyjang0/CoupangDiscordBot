@@ -7,7 +7,7 @@ import hashlib
 
 from .errors import Forbidden
 from urllib.parse import quote as _uriquote
-from typing import Optional, Any, Iterable, Dict, List
+from typing import Optional, Any, Iterable, Dict, List, Sequence
 
 
 def _dt():
@@ -83,22 +83,14 @@ class CoupangHTTPClient:
         self.access_key = access_key
         self.secret_key = secret_key
         self.connector = connector
-        self.__session: Optional[aiohttp.ClientSession] = None
-
-    def recreate(self) -> None:
-
-        if self.__session.closed:
-            self.__session = aiohttp.ClientSession(
-                connector=self.connector
-            )
 
     async def request(
             self,
             route: Route,
             *,
-            files=None,
+            files: Optional[Sequence] = None,
             form: Optional[Iterable[Dict[str, Any]]] = None,
-            **kwargs
+            **kwargs: Any
     ):
 
         method = route.method
@@ -113,18 +105,15 @@ class CoupangHTTPClient:
 
         kwargs["headers"] = headers
 
-        async with self.__session.request(method, url, **kwargs) as r:
+        async with aiohttp.ClientSession().request(method, url, **kwargs) as r:
             data = await json_or_text(r)
+
+            print(r.status)
 
             if 300 > r.status >= 200:
                 return data
 
             raise
-
-    async def close(self) -> None:
-
-        if self.__session:
-            await self.__session.close()
 
     def search_product(
             self,
