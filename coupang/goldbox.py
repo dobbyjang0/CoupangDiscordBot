@@ -3,6 +3,10 @@ from .product import BaseProduct
 
 class GoldBox(BaseProduct):
 
+    def __init__(self, goldbox_payload):
+        self.rank = goldbox_payload["rank"]
+        super().__init__(goldbox_payload)
+
     def __str__(self):
         return self.name
 
