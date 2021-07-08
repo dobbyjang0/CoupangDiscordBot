@@ -40,12 +40,13 @@ async def json_or_text(response: aiohttp.ClientResponse) -> Any:
 
 
 class Route:
-    BASE = "https://api-gateway.coupang.com"
+    GATEWAY_BASE = "https://api-gateway.coupang.com"
+    URL_BASE = "/v2/providers/affiliate_open_api/apis/openapi/v1"
 
     def __init__(self, method: str, path: str, **parameters) -> None:
         self.path: str = path
         self.method = method
-        url = "{}{}".format(self.BASE, path)
+        url = "{}{}{}".format(self.GATEWAY_BASE, self.URL_BASE, path)
 
         if parameters:
             url = url.format_map({k: _uriquote(v) if isinstance(v, str) else v for k, v in parameters.items()})
@@ -76,7 +77,7 @@ class CoupangHTTPClient:
     ):
 
         method = route.method
-        path = route.path
+        path = route.URL_BASE + route.path
         url = route.url
 
         authorization = auth(
@@ -122,7 +123,7 @@ class CoupangHTTPClient:
         return self.request(r)
 
     def convert_to_partner_link(self, urls: List[str]):
-        r = Route("POST", "/v2/providers/affiliate_open_api/apis/openapi/v1/deeplink")
+        r = Route("POST", "/deeplink")
         coupang_urls = {"coupangUrls": urls}
 
         return self.request(r, data=json.dumps(coupang_urls))
