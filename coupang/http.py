@@ -142,16 +142,29 @@ class CoupangHTTPClient:
 
         return data
 
-    def search_product(
+    def get_gold_boxes(self, sub_id: Optional[str] = None):
+        r = Route("GET", "/products/goldbox&subId={sub_id}", sub_id=sub_id)
+
+        return self.request(r)
+
+    def search_products(
             self,
             keyword: str,
-            limit: int = 50
+            limit: int = 50,
+            sub_id: Optional[str] = None
     ):
 
         if keyword is None:
             raise Forbidden("keyword is must be not NoneType.")
 
-        r = Route("GET", "/products/search?keyword={keyword}&limit={limit}", keyword=keyword, limit=limit)
+        r = Route(
+            "GET",
+            "/products/search?keyword={keyword}&limit={limit}&subId={sub_id}",
+            keyword=keyword,
+            limit=limit,
+            sub_id=sub_id
+        )
+
         return self.request(r)
 
     def convert_to_partner_link(self, urls: List[str]):
