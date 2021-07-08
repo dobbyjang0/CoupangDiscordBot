@@ -6,6 +6,10 @@ class Forbidden(Exception):
     pass
 
 
+class NotFound(Exception):
+    pass
+
+
 class CoupangException(Exception):
 
     def __init__(self, response: ClientResponse, message: Optional[Union[str, Dict[str, Any]]]):
