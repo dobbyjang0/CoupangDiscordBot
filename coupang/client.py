@@ -19,5 +19,5 @@ class CoupangClient:
 
         return product.Product(product_payload)
 
-    async def get_link(self, url):
-        return await self.http.convert_to_partner_link([url])
+    def get_link(self, url: str):
+        return self.http.convert_to_partner_link([url])
