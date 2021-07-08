@@ -142,7 +142,7 @@ class CoupangHTTPClient:
 
         return data
 
-    def get_gold_boxes(self, sub_id: Optional[str] = None):
+    def fetch_gold_boxes(self, sub_id: Optional[str] = None):
         r = Route("GET", "/products/goldbox&subId={sub_id}", sub_id=sub_id)
 
         return self.request(r)
