@@ -6,7 +6,7 @@ import hmac
 import aiohttp
 import hashlib
 
-from .errors import Forbidden, InvalidSignature, CoupangException
+from .errors import Forbidden, NotFound, InvalidSignature, CoupangException
 from .utils import MISSING
 from urllib.parse import quote as _uriquote
 from typing import Optional, Any, Iterable, Dict, List, Sequence
@@ -146,6 +146,17 @@ class CoupangHTTPClient:
         r = Route("GET", "/products/goldbox&subId={sub_id}", sub_id=sub_id)
 
         return self.request(r)
+
+    async def fetch_gold_box(self, product_id: int):
+
+        gold_boxes = await self.fetch_gold_boxes()
+
+        result = next((x for x in gold_boxes["data"] if x["productId"] == product_id), None)
+
+        if result:
+            return result
+
+        raise NotFound("gold box not found.")
 
     def search_products(
             self,
