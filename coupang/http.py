@@ -5,31 +5,17 @@ import hmac
 import aiohttp
 import hashlib
 
-from .errors import Forbidden
+from .errors import Forbidden, InvalidSignature
 from urllib.parse import quote as _uriquote
 from typing import Optional, Any, Iterable, Dict, List, Sequence
 
 
-def _dt():
-    os.environ['TZ'] = 'GMT+0'
-    return time.strftime('%y%m%d') + 'T'+time.strftime('%H%M%S') + 'Z'
+def auth(method, url, secret_key, access_key):
+    path, *query = url.split("?")
 
-
-def auth(
-        method: str,
-        access_key: str,
-        secret_key: str,
-        path: str,
-        query: str = None
-):
-
-    dt = _dt()
-
-    if query is not None:
-        message = f"{dt}{method}{path}{query}"
-
-    else:
-        message = f"{dt}{method}{path}"
+    os.environ["TZ"] = "GMT+0"
+    datetime = time.strftime('%y%m%d')+'T'+time.strftime('%H%M%S')+'Z'
+    message = datetime + method + path + (query[0] if query else "")
 
     signature = hmac.new(
         bytes(secret_key, "utf-8"),
@@ -37,11 +23,7 @@ def auth(
         hashlib.sha256
     ).hexdigest()
 
-    authorization = f"""
-    CEA algorithm=HmacSHA256, access-key={access_key}, signed-date={dt}, signature={signature}
-    """
-
-    return authorization.strip()
+    return "CEA algorithm=HmacSHA256, access-key={}, signed-date={}, signature={}".format(access_key, datetime, signature)
 
 
 async def json_or_text(response: aiohttp.ClientResponse) -> Any:
@@ -58,12 +40,12 @@ async def json_or_text(response: aiohttp.ClientResponse) -> Any:
 
 
 class Route:
-    BASE = "https://api-gateway.coupang.com/v2/providers/affiliate_open_api/apis/openapi/v1/"
+    BASE = "https://api-gateway.coupang.com"
 
     def __init__(self, method: str, path: str, **parameters) -> None:
         self.path: str = path
         self.method = method
-        url = f"{self.BASE}{self.path}"
+        url = "{}{}".format(self.BASE, path)
 
         if parameters:
             url = url.format_map({k: _uriquote(v) if isinstance(v, str) else v for k, v in parameters.items()})
@@ -94,9 +76,15 @@ class CoupangHTTPClient:
     ):
 
         method = route.method
+        path = route.path
         url = route.url
 
-        authorization = auth(method=method, path=url, access_key=self.access_key, secret_key=self.secret_key)
+        authorization = auth(
+            method=method,
+            url=path,
+            access_key=self.access_key,
+            secret_key=self.secret_key
+        )
 
         headers = {
             "Authorization": authorization,
@@ -105,13 +93,19 @@ class CoupangHTTPClient:
 
         kwargs["headers"] = headers
 
-        async with aiohttp.ClientSession().request(method, url, **kwargs) as r:
-            data = await json_or_text(r)
+        async with aiohttp.ClientSession().request(
+                method=method,
+                url=url,
+                **kwargs
+        ) as r:
 
-            print(r.status)
+            data = await json_or_text(r)
 
             if 300 > r.status >= 200:
                 return data
+
+            if r.status == 401:
+                raise InvalidSignature
 
             raise
 
@@ -128,7 +122,7 @@ class CoupangHTTPClient:
         return self.request(r)
 
     def convert_to_partner_link(self, urls: List[str]):
-        r = Route("POST", "/deeplink")
+        r = Route("POST", "/v2/providers/affiliate_open_api/apis/openapi/v1/deeplink")
         coupang_urls = {"coupangUrls": urls}
 
         return self.request(r, data=json.dumps(coupang_urls))
