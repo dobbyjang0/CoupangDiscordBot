@@ -64,7 +64,7 @@ class CoupangHTTPClient:
             connector: Optional[aiohttp.BaseConnector] = None
     ):
 
-        self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()  if loop is None else loop
+        self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
         self.__session: aiohttp.ClientSession = MISSING
         self.access_key: Optional[str] = None
         self.secret_key: Optional[str] = None
@@ -97,7 +97,7 @@ class CoupangHTTPClient:
 
         kwargs["headers"] = headers
 
-        async with aiohttp.ClientSession().request(
+        async with self.__session.request(
                 method=method,
                 url=url,
                 **kwargs
@@ -112,6 +112,11 @@ class CoupangHTTPClient:
                 raise InvalidSignature
 
             raise
+
+    async def close(self) -> None:
+
+        if self.__session:
+            await self.__session.close()
 
     async def static_login(self, access_key: str, secret_key: str):
 
