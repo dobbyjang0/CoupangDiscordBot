@@ -1,3 +1,4 @@
+import asyncio
 import os
 import json
 import time
@@ -5,7 +6,8 @@ import hmac
 import aiohttp
 import hashlib
 
-from .errors import Forbidden, InvalidSignature
+from .errors import Forbidden, InvalidSignature, CoupangException
+from .utils import MISSING
 from urllib.parse import quote as _uriquote
 from typing import Optional, Any, Iterable, Dict, List, Sequence
 
@@ -58,13 +60,14 @@ class CoupangHTTPClient:
 
     def __init__(
             self,
-            access_key: str,
-            secret_key: str,
+            loop: Optional[asyncio.AbstractEventLoop] = None,
             connector: Optional[aiohttp.BaseConnector] = None
     ):
 
-        self.access_key = access_key
-        self.secret_key = secret_key
+        self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()  if loop is None else loop
+        self.__session: aiohttp.ClientSession = MISSING
+        self.access_key: Optional[str] = None
+        self.secret_key: Optional[str] = None
         self.connector = connector
 
     async def request(
@@ -109,6 +112,30 @@ class CoupangHTTPClient:
                 raise InvalidSignature
 
             raise
+
+    async def static_login(self, access_key: str, secret_key: str):
+
+        self.__session = aiohttp.ClientSession(connector=self.connector)
+        old_access_key, old_secret_key = self.access_key, self.secret_key
+
+        self.access_key = access_key
+        self.secret_key = secret_key
+
+        try:
+            data = await self.convert_to_partner_link([
+                "https://www.coupang.com/np/search?component=&q=good&channel=user"
+            ])
+
+        except CoupangException as exc:
+            self.access_key = old_access_key
+            self.secret_key = old_secret_key
+
+            if exc.status == 401:
+                raise InvalidSignature(exc.response, 'Invalid Signature.') from exc
+
+            raise
+
+        return data
 
     def search_product(
             self,
