@@ -2,6 +2,7 @@ import asyncio
 
 from typing import Optional
 from .http import CoupangHTTPClient
+from .goldbox import GoldBox
 from . import product
 
 
@@ -37,9 +38,14 @@ class CoupangClient:
             limit: int = 20
     ):
 
-        product_payload = await self.http.search_product(keyword, limit)
+        product_payload = await self.http.search_products(keyword, limit)
 
         return product.Product(product_payload)
 
     def get_link(self, url: str):
         return self.http.convert_to_partner_link([url])
+
+    async def fetch_gold_boxes(self):
+        raw_data = await self.http.fetch_gold_boxes()
+
+        return [GoldBox(data) for data in raw_data]
