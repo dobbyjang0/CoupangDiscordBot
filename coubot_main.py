@@ -8,8 +8,9 @@ import nest_asyncio
 from tendo import singleton
 from dotenv import load_dotenv
 from discord.ext import commands
-from discord_slash import SlashCommand, SlashContext
+from coupang import CoupangClient
 from discord_slash.model import ButtonStyle
+from discord_slash import SlashCommand, SlashContext
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from discord_slash.utils.manage_commands import create_option, create_choice
 from discord_slash.utils.manage_components import *
@@ -27,6 +28,9 @@ slash = SlashCommand(
     override_type=True
 )
 test_guild_ids = [820642064365649930]
+
+coupang_client = CoupangClient(loop=bot.loop)
+
 load_dotenv("token.env")
 
 extensions = [
@@ -37,9 +41,15 @@ extensions = [
 
 @bot.event
 async def on_ready():
+    coupang_client.login(
+        access_key="dd9f93c9-4d02-4b6b-94e2-1e3c3aa04947",
+        secret_key="dd9f93c9-4d02-4b6b-94e2-1e3c3aa04947"
+    )
+
     sched = AsyncIOScheduler(timezone="Asia/Seoul")
     sched.add_job(triggers.AlarmTrigger(bot).test_process, 'interval', seconds=30)
     sched.start()
+
     print("--- 연결 성공 ---")
     print(f"봇 이름: {bot.user}")
     print(f"ID: {bot.user.id}")
@@ -402,6 +412,7 @@ async def kill_bot(ctx):
         await msg.edit(embed=embed_maker("kill_canceled").get, delete_after=5)
 
 if __name__ == "__main__":
+
     for extension in extensions:
         try:
             bot.load_extension(extension)
