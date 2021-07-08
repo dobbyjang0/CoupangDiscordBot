@@ -4,6 +4,7 @@ import asyncio
 import discord
 import nest_asyncio
 
+from coupang import CoupangClient
 from tendo import singleton
 from dotenv import load_dotenv
 from discord.ext import commands
@@ -21,6 +22,8 @@ me = singleton.SingleInstance()
 bot = commands.Bot(command_prefix="!")
 load_dotenv("token.env")
 
+coupang_client = CoupangClient(loop=bot.loop)
+
 extensions = [
     "res.Cogs.alarms"
 ]
@@ -30,7 +33,12 @@ async def on_ready():
     sched = AsyncIOScheduler(timezone="Asia/Seoul")
     sched.add_job(triggers.AlarmTrigger(bot).test_process, 'interval', seconds=30)
     sched.start()
-    
+
+    coupang_client.login(
+        access_key="dd9f93c9-4d02-4b6b-94e2-1e3c3aa04947",
+        secret_key="6eed060216ccd101efea0b74d0e014e199b004d0"
+    )
+
     print("--- 연결 성공 ---")
     print(f"봇 이름: {bot.user}")
     print(f"ID: {bot.user.id}")
@@ -38,6 +46,12 @@ async def on_ready():
 #@bot.event
 #async def on_command_error(error):
 #    pass
+
+
+@bot.command(name="test")
+async def test_command(ctx, url):
+    link = await coupang_client.get_link(url)
+    await ctx.send(link)
 
 # 쿠팡 관련 커맨드
 @bot.group(name="쿠팡")
@@ -228,6 +242,7 @@ async def kill_bot(ctx):
         await bot.close()
     else:
         await msg.edit(embed=embed_maker("kill_canceled").get, delete_after=5)
+
 
 if __name__ == "__main__":
     for extension in extensions:
