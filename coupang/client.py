@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 
 from typing import Optional, List
 from .http import CoupangHTTPClient
@@ -53,3 +54,60 @@ class CoupangClient:
         raw_data = await self.http.fetch_gold_boxes()
 
         return [GoldBox(data) for data in raw_data]
+
+    def get_clicks(
+            self,
+            start_date: datetime.datetime,
+            end_date: datetime.datetime,
+            page: Optional[int] = None
+    ):
+
+        if start_date.date() < datetime.date(2018, 11, 1):
+            raise
+
+        if end_date.date() < start_date.date() - datetime.timedelta(days=180):
+            raise
+
+        return self.http.get_clicks(
+            start_date.strftime("%y%m%d"),
+            end_date.strftime("%y%m%d"),
+            page
+        )
+
+    def get_orders(
+            self,
+            start_date: datetime.datetime,
+            end_date: datetime.datetime,
+            page: Optional[int] = None
+    ):
+
+        if start_date.date() < datetime.date(2018, 11, 1):
+            raise
+
+        if end_date.date() < start_date.date() - datetime.timedelta(days=180):
+            raise
+
+        return self.http.get_orders(
+            start_date.strftime("%y%m%d"),
+            end_date.strftime("%y%m%d"),
+            page
+        )
+
+    def get_cancels(
+            self,
+            start_date: datetime.datetime,
+            end_date: datetime.datetime,
+            page: Optional[int] = None
+    ):
+
+        if start_date.date() < datetime.date(2018, 11, 1):
+            raise
+
+        if end_date.date() < start_date.date() - datetime.timedelta(days=180):
+            raise
+
+        return self.http.get_cancels(
+            start_date.strftime("%y%m%d"),
+            end_date.strftime("%y%m%d"),
+            page
+        )
