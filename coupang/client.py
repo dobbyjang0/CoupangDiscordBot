@@ -1,9 +1,9 @@
 import asyncio
 
-from typing import Optional
+from typing import Optional, List
 from .http import CoupangHTTPClient
 from .goldbox import GoldBox
-from . import product
+from .product import Product
 
 
 class CoupangClient:
@@ -32,15 +32,19 @@ class CoupangClient:
 
         loop.run_until_complete(future)
 
-    async def search(
+    async def search_products(
             self,
             keyword: str,
             limit: int = 20
-    ):
+    ) -> Optional[List[Product]]:
 
-        product_payload = await self.http.search_products(keyword, limit)
+        response = await self.http.search_products(keyword, limit)
+        payloads = response["data"]["productData"]
 
-        return product.Product(product_payload)
+        if not payloads:
+            return None
+
+        return [Product(payload) for payload in payloads]
 
     def get_link(self, url: str):
         return self.http.convert_to_partner_link([url])
