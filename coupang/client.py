@@ -39,12 +39,12 @@ class CoupangClient:
     ) -> Optional[List[Product]]:
 
         response = await self.http.search_products(keyword, limit)
-        payloads = response["data"]["productData"]
+        payloads = response.get("data", None)
 
         if not payloads:
             return None
 
-        return [Product(payload) for payload in payloads]
+        return [Product(payload) for payload in payloads["productData"]]
 
     def get_link(self, url: str):
         return self.http.convert_to_partner_link([url])
