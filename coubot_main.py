@@ -43,7 +43,7 @@ extensions = [
 async def on_ready():
     coupang_client.login(
         access_key="dd9f93c9-4d02-4b6b-94e2-1e3c3aa04947",
-        secret_key="dd9f93c9-4d02-4b6b-94e2-1e3c3aa04947"
+        secret_key="6eed060216ccd101efea0b74d0e014e199b004d0"
     )
 
     sched = AsyncIOScheduler(timezone="Asia/Seoul")
@@ -115,12 +115,9 @@ async def group_coupang_cmd_search(
         embed.set_image(url="")
         return await ctx.send(embed=embed)
 
-    url = "https://www.coupang.com/np/search?component=&q=%s" % search_term
-    cou_parser = coubot.Parser(url)
+    products = await coupang_client.search_products(keyword=search_term, limit=count)
 
-    item_list = cou_parser.get_items(count)
-
-    if not item_list:
+    if products is None:
         return await ctx.send("검색결과가 없습니다.")
 
     buttons = [
@@ -145,17 +142,17 @@ async def group_coupang_cmd_search(
 
     embeds = []
 
-    for item in item_list:
+    for product in products:
         embed = coubot.FormBase.search_output_simple(
-            name=item["name"],
-            url=item["url"],
-            price=item["price"],
-            image_url=item["image_url"],
-            is_rocket=item["is_rocket"],
-            rating=float(item["rating"]),
-            rating_count=item["rating_count"],
-            discount_rate=item["discount_rate"],
-            base_price=item["base_price"]
+            name=product.name,
+            url=product.url,
+            price=product.price,
+            image_url=product.image_url,
+            is_rocket=product.is_rocket(),
+            rating=1.0,
+            rating_count=1.0,
+            discount_rate=1.0,
+            base_price=1
         )
         embeds.append(embed)
 
@@ -236,7 +233,7 @@ async def group_coupang_cmd_search(
                 components=components
             )
 
-            if button_ctx.custom_id == "ture_btn":
+            if button_ctx.custom_id == "true_btn":
                 return
 
             components[0] = get_select()
