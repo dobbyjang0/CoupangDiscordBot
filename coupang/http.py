@@ -183,3 +183,54 @@ class CoupangHTTPClient:
         coupang_urls = {"coupangUrls": urls}
 
         return self.request(r, data=json.dumps(coupang_urls))
+
+    def get_clicks(
+            self,
+            start_date: str,
+            end_date: str,
+            page: Optional[int] = None
+    ):
+
+        r = Route(
+            "GET",
+            "/reports/clicks?startDate={start_date}?endDate={end_date}?page={page}",
+            start_date=start_date,
+            end_date=end_date,
+            page=page
+        )
+
+        return self.request(r)
+
+    def get_orders(
+            self,
+            start_date: str,
+            end_date: str,
+            page: Optional[int] = None
+    ):
+
+        r = Route(
+            "GET",
+            "/reports/orders?startDate={start_date}?endDate={end_date}?page={page}",
+            start_date=start_date,
+            end_date=end_date,
+            page=page
+        )
+
+        return self.request(r)
+
+    def get_cancels(
+            self,
+            start_date: str,
+            end_date: str,
+            page: Optional[int] = None
+    ):
+
+        r = Route(
+            "GET",
+            "/reports/cancels?startDate={start_date}?endDate={end_date}?page={page}",
+            start_date=start_date,
+            end_date=end_date,
+            page=page
+        )
+
+        return self.request(r)
