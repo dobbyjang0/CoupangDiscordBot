@@ -32,7 +32,7 @@ async def json_or_text(response: aiohttp.ClientResponse) -> Any:
     text = await response.text(encoding='utf-8')
 
     try:
-        if response.headers['content-type'] == 'application/json':
+        if response.headers['content-type'] == 'application/json;charset=UTF-8':
             return json.loads(text)
 
     except KeyError:
@@ -46,14 +46,14 @@ class Route:
     URL_BASE = "/v2/providers/affiliate_open_api/apis/openapi/v1"
 
     def __init__(self, method: str, path: str, **parameters) -> None:
-        self.path: str = path
-        self.method = method
-        url = "{}{}{}".format(self.GATEWAY_BASE, self.URL_BASE, path)
 
         if parameters:
-            url = url.format_map({k: _uriquote(v) if isinstance(v, str) else v for k, v in parameters.items()})
+            path = path.format_map({k: _uriquote(v) if isinstance(v, str) else v for k, v in parameters.items()})
 
-        self.url: str = url
+        self.path = path
+
+        self.method = method
+        self.url = "{}{}{}".format(self.GATEWAY_BASE, self.URL_BASE, path)
 
 
 class CoupangHTTPClient:
@@ -109,7 +109,7 @@ class CoupangHTTPClient:
                 return data
 
             if r.status == 401:
-                raise InvalidSignature
+                raise InvalidSignature(r, 'Invalid Signature.')
 
             raise
 
@@ -169,8 +169,8 @@ class CoupangHTTPClient:
             raise Forbidden("keyword is must be not NoneType.")
 
         r = Route(
-            "GET",
-            "/products/search?keyword={keyword}&limit={limit}&subId={sub_id}",
+            method="GET",
+            path="/products/search?keyword={keyword}&limit={limit}&subId={sub_id}",
             keyword=keyword,
             limit=limit,
             sub_id=sub_id
