@@ -21,6 +21,25 @@ class FormBase(discord.Embed):
         return self
 
     @classmethod
+    def coupang_main(cls):
+        self = cls()
+
+        descriptions = {
+            "골드박스": "https://coupa.ng/bSQUxy",
+            "로켓프레쉬": "https://coupa.ng/bSQUDh",
+            "로켓와우": "https://coupa.ng/bSQUFP",
+            "로켓직구": "https://coupa.ng/bSQUJ4",
+            "로켓배송": "https://coupa.ng/bSQUMW"
+        }
+
+        self.title = "쿠팡"
+        self.description = "\n".join("▶ [**%s**](<%s>)" % (k, v) for k, v in descriptions.items())
+        self.url = "https://coupa.ng/bSQJi8"
+        self.set_thumbnail(url="https://cdn.discordapp.com/attachments/804815694717911080/817096183637344286/img.png")
+
+        return self
+
+    @classmethod
     def search_output_simple(
             cls,
             name: str,
@@ -40,21 +59,20 @@ class FormBase(discord.Embed):
             full_moon = int(rating)
             half_moon = rating % 1
 
-            empty_moons = "🌕" * full_moon
+            full_moons = "🌕" * full_moon
 
             if half_moon == 0.5:
-                return f"{empty_moons}🌗"
+                return f"{full_moons}🌗"
 
-            return empty_moons
+            return full_moons
 
-        if rating == "":
-            rating_info = ""
+        rating_info = ""
 
-        else:
+        if rating != "":
             rating_moon = make_rating_to_moon()
-            rating_info = f" {rating_moon} {rating_count}"
+            rating_info = f" {rating_moon} ({rating_count:,})"
 
-        price_text = f"**{price}원**"
+        price_text = f"**{price} 원**"
 
         if discount_rate == "":
             self.description = price_text
@@ -73,21 +91,15 @@ class FormBase(discord.Embed):
 
         return self
 
+    @classmethod
+    def invalid_coupang_url(cls):
+        self = cls()
 
-# 처음에 안바뀌는건 init_make, 처음에 값을 넣어줘야 되는건 insert에서 해줘야함
-class coupang_main(FormBase):
-    def init_make(self):
-        descriptions = {
-            "골드박스": "https://coupa.ng/bSQUxy",
-            "로켓프레쉬": "https://coupa.ng/bSQUDh",
-            "로켓와우": "https://coupa.ng/bSQUFP",
-            "로켓직구": "https://coupa.ng/bSQUJ4",
-            "로켓배송": "https://coupa.ng/bSQUMW"
-        }
-        self.embed.title = "쿠팡"
-        self.embed.description = "\n".join("▶ [**%s**](<%s>)" % (k, v) for k, v in descriptions.items())
-        self.embed.url = "https://coupa.ng/bSQJi8"
-        self.embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/804815694717911080/817096183637344286/img.png")
+        self.title = "이런!"
+        self.description = "올바른 쿠팡 상품 링크가 아닌 것 같아요."
+        self.colour = discord.Colour.red()
+
+        return self
 
 
 class serch_waiting(FormBase):
@@ -100,12 +112,6 @@ class serch_waiting(FormBase):
 class serch_ing(FormBase):
     def init_make(self):
         self.embed.title = "검색중이에요."
-        
-class serch_oops(FormBase):
-    def init_make(self):
-        self.embed.title = "이런!"
-        self.embed.description = "올바른 쿠팡 상품 링크가 아닌 것 같아요."
-        self.embed.color = discord.Colour.red()
         
 class kill_count(FormBase):
     def insert(self, timer, *arg, **kwarg):
