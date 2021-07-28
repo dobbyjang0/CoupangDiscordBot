@@ -1,4 +1,6 @@
 from typing import List
+from bs4 import BeautifulSoup
+from aiohttp import ClientSession
 from discord_slash.model import ButtonStyle
 from discord_slash.utils.manage_components import create_button, create_actionrow
 
@@ -63,3 +65,17 @@ def label_maker(string: str) -> str:
         return " ".join(result)
 
     return " ".join(result)
+
+
+async def parse(url: str) -> BeautifulSoup:
+
+    async with ClientSession() as session, session.request(
+        url=url,
+        method="GET",
+        headers={
+            'User-Agent': 'Mozilla/5.0'
+        }
+    ) as resp:
+        raw_data = await resp.read()
+
+    return BeautifulSoup(raw_data, 'lxml')
