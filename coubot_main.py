@@ -276,15 +276,9 @@ def is_teamembers(): # 팀 멤버 확인 Decorator
         return ctx.author in team.members
     return commands.check(predicate)
 
-@slash.slash(
-    name="cog",
-    description="팀 전용 명령어"
-)
-async def cogs(ctx):
-    pass
 
 @slash.subcommand(
-    base="cog",
+    base="cogs",
     name="load",
     description="load cog",
     options=[
@@ -316,7 +310,7 @@ async def load(ctx, cog_path: str):
 
 
 @slash.subcommand(
-    base="cog",
+    base="cogs",
     name="unload",
     description="unload cog",
     options=[
@@ -348,7 +342,7 @@ async def unload(ctx, cog_path):
 
 
 @slash.subcommand(
-    base="cog",
+    base="cogs",
     name="reload",
     description="reload cog",
     options=[
