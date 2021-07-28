@@ -1,18 +1,16 @@
 import os
 import time
 import coubot
-import discord
 import asyncio
 import nest_asyncio
 
 from tendo import singleton
 from dotenv import load_dotenv
 from discord.ext import commands
-from coupang import CoupangClient
-from discord_slash.model import ButtonStyle
+from coubot.coupang import CoupangClient
 from discord_slash import SlashCommand, SlashContext
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from discord_slash.utils.manage_commands import create_option, create_choice
+from discord_slash.utils.manage_commands import create_option
 from discord_slash.utils.manage_components import *
 
 from coubot import triggers
@@ -56,7 +54,8 @@ async def on_ready():
 
 
 # 쿠팡 커맨드
-@slash.slash(
+@slash.subcommand(
+    base="쿠팡",
     name="검색",
     description="쿠팡에서 검색을 합니다.",
     options=[
@@ -89,7 +88,7 @@ async def on_ready():
         "검색어": "search_term",
         "개수": "count",
         "드롭다운": "dropdown",
-        "나만보기": "hidden_message"
+        "나만보기": "hidden"
     },
     guild_ids=test_guild_ids
 )
@@ -98,7 +97,7 @@ async def group_coupang_cmd_search(
         search_term: str,
         count: int = 3,
         dropdown: bool = False,
-        hidden_message: bool = False
+        hidden: bool = False
 ):
 
     if count > 9:
@@ -162,7 +161,7 @@ async def group_coupang_cmd_search(
             await ctx.send(
                 embed=embed,
                 components=[button_action_row],
-                hidden=hidden_message
+                hidden=hidden
             )
 
         select_ctx = await wait_for_component(
@@ -199,7 +198,7 @@ async def group_coupang_cmd_search(
 
         msg = await ctx.send(
             embeds=embeds,
-            hidden=hidden_message,
+            hidden=hidden,
             components=components
         )
 
