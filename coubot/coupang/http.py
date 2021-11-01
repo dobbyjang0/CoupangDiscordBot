@@ -41,7 +41,7 @@ async def json_or_text(response: aiohttp.ClientResponse) -> Any:
     return text
 
 
-class Route:
+class CoupangRoute:
     GATEWAY_BASE = "https://api-gateway.coupang.com"
     URL_BASE = "/v2/providers/affiliate_open_api/apis/openapi/v1"
 
@@ -71,12 +71,9 @@ class CoupangHTTPClient:
         self.connector = connector
 
     async def request(
-            self,
-            route: Route,
-            *,
-            files: Optional[Sequence] = None,
-            form: Optional[Iterable[Dict[str, Any]]] = None,
-            **kwargs: Any
+        self,
+        route: CoupangRoute,
+        **kwargs: Any
     ):
 
         method = route.method
@@ -143,7 +140,7 @@ class CoupangHTTPClient:
         return data
 
     def fetch_gold_boxes(self, sub_id: Optional[str] = None):
-        r = Route("GET", "/products/goldbox&subId={sub_id}", sub_id=sub_id)
+        r = CoupangRoute("GET", "/products/goldbox&subId={sub_id}", sub_id=sub_id)
 
         return self.request(r)
 
@@ -168,7 +165,7 @@ class CoupangHTTPClient:
         if keyword is None:
             raise Forbidden("keyword is must be not NoneType.")
 
-        r = Route(
+        r = CoupangRoute(
             method="GET",
             path="/products/search?keyword={keyword}&limit={limit}&subId={sub_id}",
             keyword=keyword,
@@ -179,7 +176,7 @@ class CoupangHTTPClient:
         return self.request(r)
 
     def convert_to_partner_link(self, urls: List[str]):
-        r = Route("POST", "/deeplink")
+        r = CoupangRoute("POST", "/deeplink")
         coupang_urls = {"coupangUrls": urls}
 
         return self.request(r, data=json.dumps(coupang_urls))
@@ -191,7 +188,7 @@ class CoupangHTTPClient:
             page: Optional[int] = None
     ):
 
-        r = Route(
+        r = CoupangRoute(
             "GET",
             "/reports/clicks?startDate={start_date}?endDate={end_date}?page={page}",
             start_date=start_date,
@@ -208,7 +205,7 @@ class CoupangHTTPClient:
             page: Optional[int] = None
     ):
 
-        r = Route(
+        r = CoupangRoute(
             "GET",
             "/reports/orders?startDate={start_date}?endDate={end_date}?page={page}",
             start_date=start_date,
@@ -225,7 +222,7 @@ class CoupangHTTPClient:
             page: Optional[int] = None
     ):
 
-        r = Route(
+        r = CoupangRoute(
             "GET",
             "/reports/cancels?startDate={start_date}?endDate={end_date}?page={page}",
             start_date=start_date,
