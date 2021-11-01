@@ -77,7 +77,6 @@ class CoupangHTTPClient:
 
         method = route.method
         path = route.URL_BASE + route.path
-        url = route.url
 
         authorization = auth(
             method=method,
@@ -91,23 +90,8 @@ class CoupangHTTPClient:
             "Content-Type": "application/json"
         }
 
-        kwargs["headers"] = headers
-
-        async with self.__session.request(
-                method=method,
-                url=url,
-                **kwargs
-        ) as r:
-
-            data = await json_or_text(r)
-
-            if 300 > r.status >= 200:
-                return data
-
-            if r.status == 401:
-                raise InvalidSignature(r, 'Invalid Signature.')
-
-            raise
+        kwargs['headers'] = headers
+        return self._discord.http.request(route, headers=headers, **kwargs)
 
     def fetch_gold_boxes(self, sub_id: Optional[str] = None):
         r = CoupangRoute("GET", "/products/goldbox&subId={sub_id}", sub_id=sub_id)
