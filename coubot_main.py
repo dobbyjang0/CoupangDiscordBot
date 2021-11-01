@@ -32,8 +32,8 @@ coupang_client = CoupangClient(loop=bot.loop)
 load_dotenv("token.env")
 
 extensions = (
-    'res.Cogs.alarms',
-    'res.Cogs.admin_commands'
+    'cogs.alarms',
+    'cogs.admin_commands'
 )
 
 
