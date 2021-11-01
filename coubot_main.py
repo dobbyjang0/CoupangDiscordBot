@@ -99,8 +99,8 @@ async def _cmd_search_coupang_product(
     hidden: bool = False
 ):
 
-    if count > 9:
-        embed = discord.Embed(description="최대 9개의 결과만 얻을 수 있습니다.")
+    if not 0 < count <= 9:
+        embed = discord.Embed(description="최소 1개에서 9개의 결과만 얻을 수 있습니다.")
         return await ctx.send(embed=embed, hidden=True)
 
     if coubot.utils.is_startswith_http_url(search_term):
