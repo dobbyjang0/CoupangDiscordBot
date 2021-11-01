@@ -91,12 +91,12 @@ async def on_ready():
     },
     guild_ids=test_guild_ids
 )
-async def group_coupang_cmd_search(
-        ctx: SlashContext,
-        search_term: str,
-        count: int = 3,
-        dropdown: bool = False,
-        hidden: bool = False
+async def _cmd_search_coupang_product(
+    ctx: SlashContext,
+    search_term: str,
+    count: int = 3,
+    dropdown: bool = False,
+    hidden: bool = False
 ):
 
     if count > 9:
@@ -110,7 +110,6 @@ async def group_coupang_cmd_search(
             return await ctx.send(embed=embed)
 
         embed = discord.Embed()
-        embed.set_image(url="")
         return await ctx.send(embed=embed)
 
     products = await coupang_client.search_products(keyword=search_term, limit=count)
