@@ -58,18 +58,6 @@ class CoupangRoute:
 
 class CoupangHTTPClient:
 
-    def __init__(
-            self,
-            loop: Optional[asyncio.AbstractEventLoop] = None,
-            connector: Optional[aiohttp.BaseConnector] = None
-    ):
-
-        self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
-        self.__session: aiohttp.ClientSession = MISSING
-        self.access_key: Optional[str] = None
-        self.secret_key: Optional[str] = None
-        self.connector = connector
-
     async def request(
         self,
         route: CoupangRoute,
@@ -109,35 +97,6 @@ class CoupangHTTPClient:
                 raise InvalidSignature(r, 'Invalid Signature.')
 
             raise
-
-    async def close(self) -> None:
-
-        if self.__session:
-            await self.__session.close()
-
-    async def static_login(self, access_key: str, secret_key: str):
-
-        self.__session = aiohttp.ClientSession(connector=self.connector)
-        old_access_key, old_secret_key = self.access_key, self.secret_key
-
-        self.access_key = access_key
-        self.secret_key = secret_key
-
-        try:
-            data = await self.convert_to_partner_link([
-                "https://www.coupang.com/np/search?component=&q=good&channel=user"
-            ])
-
-        except CoupangException as exc:
-            self.access_key = old_access_key
-            self.secret_key = old_secret_key
-
-            if exc.status == 401:
-                raise InvalidSignature(exc.response, 'Invalid Signature.') from exc
-
-            raise
-
-        return data
 
     def fetch_gold_boxes(self, sub_id: Optional[str] = None):
         r = CoupangRoute("GET", "/products/goldbox&subId={sub_id}", sub_id=sub_id)
