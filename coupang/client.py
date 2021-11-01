@@ -17,7 +17,7 @@ class CoupangClient:
 
     def __init__(self, client: _D, *, secret_key: str, access_key: str):
         self._discord = client
-        self.req = CoupangHTTPClient(self._discord, access_key=access_key,secret_key=secret_key)
+        self.req = CoupangHTTPClient(self._discord, access_key=access_key, secret_key=secret_key)
 
     async def search_products(
         self,
