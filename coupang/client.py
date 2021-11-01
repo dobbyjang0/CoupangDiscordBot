@@ -1,9 +1,16 @@
+from __future__ import annotations
+
+import discord
 import datetime
 
-from typing import Optional, List
-from .http import CoupangHTTPClient, _D
+from .http import CoupangHTTPClient
 from .goldbox import GoldBox
 from .product import Product
+
+from typing import Optional, List, TypeVar, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    _D = TypeVar('_D', discord.Client, discord.AutoShardedClient)
 
 
 class CoupangClient:
