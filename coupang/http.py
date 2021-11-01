@@ -129,7 +129,7 @@ class CoupangHTTPClient:
 
         return self.request(r)
 
-    def convert_to_partner_link(self, *urls: List[str]):
+    def convert_to_partner_link(self, *urls: str):
         r = CoupangRoute("POST", "/deeplink")
         coupang_urls = {"coupangUrls": urls}
 
