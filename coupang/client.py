@@ -1,37 +1,16 @@
-import asyncio
 import datetime
 
 from typing import Optional, List
-from .http import CoupangHTTPClient
+from .http import CoupangHTTPClient, _D
 from .goldbox import GoldBox
 from .product import Product
 
 
 class CoupangClient:
 
-    def __init__(
-            self,
-            *,
-            loop: Optional[asyncio.AbstractEventLoop] = None
-    ):
-
-        self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
-
-        self.http = CoupangHTTPClient(loop=self.loop)
-
-    def login(self, access_key: str, secret_key: str):
-
-        loop = self.loop
-
-        future = asyncio.ensure_future(
-            self.http.static_login(
-                access_key=access_key,
-                secret_key=secret_key
-            ),
-            loop=loop
-        )
-
-        loop.run_until_complete(future)
+    def __init__(self, client: _D, *, secret_key: str, access_key: str):
+        self._discord = client
+        self.req = CoupangHTTPClient(self._discord, access_key=access_key,secret_key=secret_key)
 
     async def search_products(
             self,
@@ -39,7 +18,7 @@ class CoupangClient:
             limit: int = 20
     ) -> Optional[List[Product]]:
 
-        response = await self.http.search_products(keyword, limit)
+        response = await self.req.search_products(keyword, limit)
         payloads = response.get("data", None)
 
         if not payloads:
@@ -48,10 +27,10 @@ class CoupangClient:
         return [Product(payload) for payload in payloads["productData"]]
 
     def get_link(self, url: str):
-        return self.http.convert_to_partner_link([url])
+        return self.req.convert_to_partner_link([url])
 
     async def fetch_gold_boxes(self):
-        raw_data = await self.http.fetch_gold_boxes()
+        raw_data = await self.req.fetch_gold_boxes()
 
         return [GoldBox(data) for data in raw_data]
 
@@ -68,7 +47,7 @@ class CoupangClient:
         if end_date.date() < start_date.date() - datetime.timedelta(days=180):
             raise
 
-        return self.http.get_clicks(
+        return self.req.get_clicks(
             start_date.strftime("%y%m%d"),
             end_date.strftime("%y%m%d"),
             page
@@ -87,7 +66,7 @@ class CoupangClient:
         if end_date.date() < start_date.date() - datetime.timedelta(days=180):
             raise
 
-        return self.http.get_orders(
+        return self.req.get_orders(
             start_date.strftime("%y%m%d"),
             end_date.strftime("%y%m%d"),
             page
@@ -106,7 +85,7 @@ class CoupangClient:
         if end_date.date() < start_date.date() - datetime.timedelta(days=180):
             raise
 
-        return self.http.get_cancels(
+        return self.req.get_cancels(
             start_date.strftime("%y%m%d"),
             end_date.strftime("%y%m%d"),
             page
