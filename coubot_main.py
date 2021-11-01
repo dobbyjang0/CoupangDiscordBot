@@ -7,7 +7,7 @@ import nest_asyncio
 from tendo import singleton
 from dotenv import load_dotenv
 from discord.ext import commands
-from coubot.coupang import CoupangClient
+from coupang import CoupangClient
 from discord_slash import SlashCommand, SlashContext
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from discord_slash.utils.manage_commands import create_option
@@ -27,7 +27,6 @@ slash = SlashCommand(
     debug_guild=820642064365649930
 )
 test_guild_ids = [820642064365649930]
-
 coupang_client = CoupangClient(loop=bot.loop)
 
 load_dotenv("token.env")
