@@ -23,7 +23,8 @@ bot = commands.Bot(command_prefix="!")
 slash = SlashCommand(
     bot,
     sync_commands=True,
-    override_type=True
+    override_type=True,
+    debug_guild=820642064365649930
 )
 test_guild_ids = [820642064365649930]
 
