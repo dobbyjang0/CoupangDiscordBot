@@ -161,7 +161,7 @@ async def _cmd_search_coupang_product(
                 hidden=hidden
             )
 
-        select_ctx = await wait_for_component(
+        btn_ctx = await wait_for_component(
             client=bot,
             components=[button_action_row]
         )
@@ -177,13 +177,12 @@ async def _cmd_search_coupang_product(
             for idx, embed in enumerate(embeds)
         ]
 
-        def get_select(disable: bool = False, placeholder: str = "이곳에서 상품을 선택해주세요."):
+        def get_select(*, disable: bool = False, placeholder: str = "이곳에서 상품을 선택해주세요."):
 
             select = create_select(
                 options=select_options,
                 custom_id="select_product",
                 placeholder=placeholder,
-                min_values=1,
                 max_values=1,
                 disabled=disable
             )
@@ -200,25 +199,23 @@ async def _cmd_search_coupang_product(
 
         start_time = time.time()
 
-        while time.time() - start_time <= 120:
-
+        async def select_product():
             select_ctx = await wait_for_component(
                 client=bot,
                 messages=msg,
                 components=components
             )
 
-            first_selected_option = select_ctx.selected_options[0]
-            selected_index: int = int(first_selected_option)
+            selected_index: int = int(select_ctx.selected_options[0])
 
-            embed = embeds[selected_index]
+            e = embeds[selected_index]
 
-            components[0] = get_select(True, placeholder=embed.title)
+            components[0] = get_select(disable=True, placeholder=e.title)
             components.append(coubot.utils.pon_buttons())
 
             await select_ctx.edit_origin(
                 content="이 상품으로 보시겠습니까?",
-                embeds=[embed],
+                embed=e,
                 components=components
             )
 
@@ -229,16 +226,21 @@ async def _cmd_search_coupang_product(
             )
 
             if button_ctx.custom_id == "true_btn":
-                return
+                return button_ctx, products[selected_index]
+
+            if time.time() - start_time >= 120:
+                raise
 
             components[0] = get_select()
             del components[1]
 
             await button_ctx.edit_origin(
                 content=None,
-                embed=embed,
+                embed=e,
                 components=components
             )
+
+        s_ctx, product = await select_product()
 
 
 async def registration(ctx, product_id=None, product_price=None):
