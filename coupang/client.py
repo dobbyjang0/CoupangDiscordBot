@@ -35,7 +35,7 @@ class CoupangClient:
         return [Product(payload) for payload in payloads["productData"]]
 
     def get_link(self, url: str):
-        return self.req.convert_to_partner_link([url])
+        return self.req.convert_to_partner_link(url)
 
     async def fetch_gold_boxes(self):
         raw_data = await self.req.fetch_gold_boxes()
