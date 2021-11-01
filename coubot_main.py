@@ -27,7 +27,11 @@ slash = SlashCommand(
     debug_guild=820642064365649930
 )
 test_guild_ids = [820642064365649930]
-coupang_client = CoupangClient(loop=bot.loop)
+coupang_client = CoupangClient(
+    bot,
+    secret_key="6eed060216ccd101efea0b74d0e014e199b004d0",
+    access_key="dd9f93c9-4d02-4b6b-94e2-1e3c3aa04947"
+)
 
 load_dotenv("token.env")
 
@@ -39,11 +43,6 @@ extensions = (
 
 @bot.event
 async def on_ready():
-    coupang_client.login(
-        access_key="dd9f93c9-4d02-4b6b-94e2-1e3c3aa04947",
-        secret_key="6eed060216ccd101efea0b74d0e014e199b004d0"
-    )
-
     sched = AsyncIOScheduler(timezone="Asia/Seoul")
     sched.add_job(triggers.AlarmTrigger(bot).test_process, 'interval', seconds=30)
     sched.start()
