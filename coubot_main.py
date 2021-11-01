@@ -137,10 +137,8 @@ async def _cmd_search_coupang_product(
 
     button_action_row = create_actionrow(*buttons)
 
-    embeds = []
-
-    for product in products:
-        embed = coubot.FormBase.search_output_simple(
+    embeds = [
+        coubot.FormBase.search_output_simple(
             name=product.name,
             url=product.url,
             price=product.price,
@@ -151,7 +149,8 @@ async def _cmd_search_coupang_product(
             discount_rate=1.0,
             base_price=1
         )
-        embeds.append(embed)
+        for product in products
+    ]
 
     if dropdown is False:
 
@@ -168,16 +167,15 @@ async def _cmd_search_coupang_product(
         )
 
     else:
-        select_options = []
-
-        for idx, embed in enumerate(embeds):
-            option = create_select_option(
+        select_options = [
+            create_select_option(
                 label=coubot.utils.label_maker(embed.title),
                 description=embed.description,
                 value=str(idx),
                 emoji=f"{idx + 1}\U000020E3"
             )
-            select_options.append(option)
+            for idx, embed in enumerate(embeds)
+        ]
 
         def get_select(disable: bool = False, placeholder: str = "이곳에서 상품을 선택해주세요."):
 
