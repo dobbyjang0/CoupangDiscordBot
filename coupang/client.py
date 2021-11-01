@@ -20,9 +20,10 @@ class CoupangClient:
         self.req = CoupangHTTPClient(self._discord, access_key=access_key,secret_key=secret_key)
 
     async def search_products(
-            self,
-            keyword: str,
-            limit: int = 20
+        self,
+        keyword: str,
+        *,
+        limit: int = 20
     ) -> Optional[List[Product]]:
 
         response = await self.req.search_products(keyword, limit)
