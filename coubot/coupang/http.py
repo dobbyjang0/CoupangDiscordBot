@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import os
 import json
@@ -5,14 +7,18 @@ import time
 import hmac
 import aiohttp
 import hashlib
+import discord
 
-from .errors import Forbidden, NotFound, InvalidSignature, CoupangException
+from .errors import Forbidden, NotFound, InvalidSignature
 from .utils import MISSING
 from urllib.parse import quote as _uriquote
-from typing import Optional, Any, Iterable, Dict, List, Sequence
+from typing import TypeVar, Optional, Any, Iterable, Dict, List, Sequence, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    _D = TypeVar('_D', discord.Client, discord.AutoShardedClient)
 
 
-def auth(method, url, secret_key, access_key):
+def auth(*, method: str, url: str, secret_key: str, access_key: str):
     path, *query = url.split("?")
 
     os.environ["TZ"] = "GMT+0"
@@ -58,6 +64,11 @@ class CoupangRoute:
 
 class CoupangHTTPClient:
 
+    def __init__(self, _discord, *, access_key: str, secret_key: str):
+        self._discord: _D = _discord
+        self._access_key: str = access_key
+        self._secret_key: str = secret_key
+
     async def request(
         self,
         route: CoupangRoute,
@@ -71,8 +82,8 @@ class CoupangHTTPClient:
         authorization = auth(
             method=method,
             url=path,
-            access_key=self.access_key,
-            secret_key=self.secret_key
+            access_key=self._access_key,
+            secret_key=self._secret_key
         )
 
         headers = {
