@@ -12,6 +12,10 @@ from typing import Optional, List, TypeVar, TYPE_CHECKING
 if TYPE_CHECKING:
     _D = TypeVar('_D', discord.Client, discord.AutoShardedClient)
 
+__all__ = (
+    'CoupangClient',
+)
+
 
 class CoupangClient:
 

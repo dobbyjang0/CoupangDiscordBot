@@ -1,5 +1,7 @@
 import io
 
+__all__ = ('Image',)
+
 
 class Image:
 

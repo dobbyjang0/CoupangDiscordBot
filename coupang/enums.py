@@ -1,5 +1,7 @@
 from discord.enums import Enum
 
+__all__ = ('Category',)
+
 
 class Category(Enum):
     women_fashion = 1001

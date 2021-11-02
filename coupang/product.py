@@ -1,5 +1,10 @@
 from .asset import Asset
 
+__all__ = (
+    'BaseProduct',
+    'Product'
+)
+
 
 class BaseProduct:
 

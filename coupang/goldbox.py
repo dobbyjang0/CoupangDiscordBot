@@ -1,5 +1,7 @@
 from .product import BaseProduct
 
+__all__ = ('GoldBox',)
+
 
 class GoldBox(BaseProduct):
 
