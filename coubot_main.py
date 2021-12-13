@@ -1,11 +1,12 @@
 import os
 import time
+import json
 import coubot
 import asyncio
 import nest_asyncio
 
+from typing import TypedDict
 from tendo import singleton
-from dotenv import load_dotenv
 from discord.ext import commands
 from coupang import CoupangClient
 from discord_slash import SlashCommand, SlashContext
@@ -15,6 +16,30 @@ from discord_slash.utils.manage_components import *
 
 from coubot import triggers
 from coubot.embed_form import embed_factory as embed_maker
+
+
+class _ConfigDatabase(TypedDict, total=False):
+    user: str
+    host: str
+    port: int
+    passwd: str
+    db: str
+
+
+class _ConfigCoupang(TypedDict, total=False):
+    secret_key: str
+    access_key: str
+
+
+class __Config(TypedDict, total=False):
+    TOKEN: str
+    DATABASE: _ConfigDatabase
+    COUPANG: _ConfigCoupang
+
+
+with open('config.json', 'r') as fp:
+    __config: __Config = json.load(fp)
+
 
 nest_asyncio.apply()
 me = singleton.SingleInstance()
@@ -29,11 +54,9 @@ slash = SlashCommand(
 test_guild_ids = [820642064365649930]
 coupang_client = CoupangClient(
     bot,
-    secret_key="6eed060216ccd101efea0b74d0e014e199b004d0",
-    access_key="dd9f93c9-4d02-4b6b-94e2-1e3c3aa04947"
+    secret_key=__config['COUPANG']['secret_key'],
+    access_key=__config['COUPANG']['access_key']
 )
-
-load_dotenv("token.env")
 
 extensions = (
     'cogs.alarms',
@@ -409,4 +432,4 @@ if __name__ == "__main__":
         else:
             print('loaded %s' % extension)
 
-    bot.run(os.getenv('DISCORD_TOKEN'))
+    bot.run(__config['TOKEN'])
