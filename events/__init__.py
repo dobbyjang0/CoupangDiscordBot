@@ -1,1 +1,1 @@
-from ready import ready
+from .ready import on_ready

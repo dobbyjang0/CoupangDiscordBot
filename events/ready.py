@@ -1,10 +1,7 @@
-from index import bot
-
 __all__ = (
-    'ready',
+    'on_ready',
 )
 
 
-async def ready() -> None:
+async def on_ready() -> None:
     print("--- Success Login ---")
-    print(bot.user.name)
