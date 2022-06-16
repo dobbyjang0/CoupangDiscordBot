@@ -3,7 +3,6 @@ from __future__ import annotations
 import sys
 
 from discord import Embed
-from coubot import Color
 from typing import Any, Union, Type, TypeVar, TYPE_CHECKING
 
 from .errors import NoneFormName
